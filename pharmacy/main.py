@@ -18,7 +18,7 @@ class MainProcess:
         while True:
             frame: np.ndarray = self.capture_frame()
             prescription: List[Any] = self.scan_prescription(frame)
-            if "����ҩҩ������" in prescription and "�ϼ�" in prescription:
+            if "领退药药单汇总" in prescription and "合计" in prescription:
                 break
         
         while True:
