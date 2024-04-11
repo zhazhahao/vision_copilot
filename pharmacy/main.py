@@ -1,3 +1,4 @@
+import cv2
 import numpy as np
 from typing import Union, List, Dict, Any
 
@@ -9,7 +10,8 @@ from modules.camera_processor import CameraProcessor
 
 class MainProcess:
     def __init__(self) -> None:
-        self.camera = CameraProcessor()
+        self.camera = cv2.VideoCapture("/home/portable-00/VisionCopilot/test/20240322_151423.mp4")
+        # self.camera = CameraProcessor()
         self.yoloc_decctor = YolovDector()
         self.hand_detector = HandDetector()
         self.catch_checker = CatchChecker()
@@ -17,29 +19,29 @@ class MainProcess:
     def run(self):
         while True:
             frame: np.ndarray = self.capture_frame()
-            prescription: List[Any] = self.scan_prescription(frame)
-            if "领退药药单汇总" in prescription and "合计" in prescription:
-                break
-        
+            #prescription , res_array = self.yoloc_decctor.scan_prescription(frame)
+            #if res_array[0] in prescription and res_array[1] in prescription:
+            #    break
+            prescription = ["曲前列尼尔注射液","速碧林(那屈肝素钙注射液)","依诺肝素钠注射液"]
+            break
         while True:
             frame: np.ndarray = self.capture_frame()
 
             medicines_detections = self.detect_medicines(frame)
-            
-            drug_match: bool = drug_match(self, medicines_detections[0][0], prescription)
-
-            hands_detections = self.detect_hands(frame)
-
-            self.track_objects(medicines_detections, hands_detections)
-            
-            print(self.catch_recognition())
+            if medicines_detections is not None and medicines_detections[0] != 'nomatch':
+                drug_match: bool = self.yoloc_decctor.drug_match(medicines_detections[0][0], prescription)
+                hands_detections = self.detect_hands(frame)
+                offer_value = [{"category_id":int(medicines_detections[0][0]),"bbox":medicines_detections[1][0]}]
+                print(offer_value)
+                self.track_objects(offer_value, hands_detections)
+                print(self.catch_recognition())
 
     def capture_frame(self) -> np.ndarray:
         while True:
-          bools,mat = self.camera.achieve_image()
-          if bools:
-              
-              return mat
+            vaild,img = self.camera.read()
+            print(vaild)
+            if vaild:
+                return img
               
               
     def scan_prescription(self, frame: np.ndarray) -> List[Any]:
@@ -47,7 +49,7 @@ class MainProcess:
 
 
     def detect_medicines(self, frame: np.ndarray) -> List[Dict]:
-        return self.detect_medicines(frame)
+        return self.yoloc_decctor.detect_medicines(frame)
         
 
     def detect_hands(self, frame: np.ndarray) -> List[Dict]:

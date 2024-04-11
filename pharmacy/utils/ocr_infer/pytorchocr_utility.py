@@ -59,7 +59,7 @@ def init_args():
 
     # params for text recognizer
     parser.add_argument("--rec_algorithm", type=str, default='CRNN')
-    parser.add_argument("--rec_model_path", type=str, default="/home/portable-00/VisionCopilot/pharmacy/checkpoints/ocr/ch_ptocr_v4_det_server_infer.pth")
+    parser.add_argument("--rec_model_path", type=str, default="/home/portable-00/VisionCopilot/pharmacy/checkpoints/ocr/ch_ptocr_v4_rec_server_infer.pth")
     parser.add_argument("--rec_image_inverse", type=str2bool, default=True)
     parser.add_argument("--rec_image_shape", type=str, default="3, 48, 640")
     parser.add_argument("--rec_char_type", type=str, default='ch')
@@ -113,7 +113,7 @@ def init_args():
     parser.add_argument("--sr_batch_num", type=int, default=1)
 
     # params .yaml
-    parser.add_argument("--det_yaml_path", type=str, default="/home/portable-00/VisionCopilot/pharmacy/configs/ocr/ch_PP-OCRv4_det_student.yml")
+    parser.add_argument("--det_yaml_path", type=str, default="/home/portable-00/VisionCopilot/pharmacy/configs/ocr/ch_PP-OCRv4_det_teacher.yml")
     parser.add_argument("--rec_yaml_path", type=str, default="/home/portable-00/VisionCopilot/pharmacy/configs/ocr/ch_PP-OCRv4_rec_hgnet.yml")
     parser.add_argument("--cls_yaml_path", type=str, default=None)
     parser.add_argument("--e2e_yaml_path", type=str, default=None)

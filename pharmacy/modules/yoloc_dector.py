@@ -16,14 +16,14 @@ class YolovDector:
         self.config = Config(
             yolov_path = rf"/home/portable-00/VisionCopilot/pharmacy/checkpoints/yolo/last.pt",
         )
-        self.model = YOLO("pharmacy/models/last.pt")
+        self.model = YOLO(self.config.yolov_path)
         self.text_sys = TextSystem(utility.parse_args())
         self.data = load_json("/home/portable-00/VisionCopilot/pharmacy/database/medicine_database.json")
         self.data_lists = load_txt("/home/portable-00/VisionCopilot/pharmacy/database/medicine_names.txt")
         self.back_current_shelf = ''
         
     def scan_prescription(self,frame):
-        return procession(frame,self.text_sys,self.data_lists,"prescription")
+        return procession(frame,self.text_sys,self.data_lists,"prescription"),self.data_lists[-2:]
         
     def detect_medicines(self,frame):
         try:
@@ -42,7 +42,7 @@ class YolovDector:
                 boxes = result.boxes
                 # probs = result.probs
                 cls, conf, xywh = boxes.cls, boxes.conf, boxes.xywh  # get info needed
-                print([tensor_converter(cls), tensor_converter(xywh)])
+                # print([tensor_converter(cls), tensor_converter(xywh)])
                 if cls.__len__()==0:
                     pass
                 else:
@@ -52,18 +52,19 @@ class YolovDector:
                             detect_res_cls = "nomatch"
                             return [detect_res_cls, []]
                         else:
-                            return [tensor_converter(detect_res_cls), tensor_converter(xywh)]
+                            return [tensor_converter(cls), tensor_converter(xywh)]
                     elif current_drug.get("货架号") != self.back_current_shelf:
                         detect_res_cls = "nomatch"
                         return [detect_res_cls, []]
                     else:
-                        detect_res_cls = cls
-                        return [tensor_converter(detect_res_cls), tensor_converter(xywh)]
+                        return [tensor_converter(cls), tensor_converter(xywh)]
         except Exception as e:
             traceback.print_exc()
     def drug_match(self, medicine_cls, prescription):
+        
+        # print("111111211"+medicine_cls)
         med_name = get_drug_by_index(medicine_cls,self.data)
-        if med_name["ҩƷ��"] in prescription:
+        if med_name["药品名称"] in prescription:
             return True
         else:
             return False

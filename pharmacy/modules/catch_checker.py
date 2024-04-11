@@ -8,8 +8,8 @@ from qinglang.utils.mathematic import euclidean_distance
 
 class CatchChecker:
     def __init__(self) -> None:
-        self.hand_tracker = ObjectTracker()
-        self.medicine_tracker = ObjectTracker()
+        self.hand_tracker = ObjectTracker(120, 5, 200)
+        self.medicine_tracker = ObjectTracker(120, 5, 200)
     
         self.config = Config('/home/portable-00/VisionCopilot/pharmacy/configs/catch_check.yaml')
 
