@@ -1,13 +1,18 @@
 import numpy as np
 from typing import Union, List, Dict, Any
-from config import *
-from utils.ocr_infer.predict_system import *
+
+from modules.yoloc_dector import YolovDector
+from modules.hand_detector import HandDetector
+from modules.catch_checker import CatchChecker
+from modules.camera_processor import CameraProcessor
 
 
 class MainProcess:
     def __init__(self) -> None:
         self.camera = CameraProcessor()
-        self.camera.start()
+        self.yoloc_decctor = YolovDector()
+        self.hand_detector = HandDetector()
+        self.catch_checker = CatchChecker()
 
     def run(self):
         while True:
@@ -27,7 +32,7 @@ class MainProcess:
 
             self.track_objects(medicines_detections, hands_detections)
             
-            self.catch_recognition()
+            print(self.catch_recognition())
 
     def capture_frame(self) -> np.ndarray:
         while True:
@@ -38,31 +43,27 @@ class MainProcess:
               
               
     def scan_prescription(self, frame: np.ndarray) -> List[Any]:
-        prescription_list = procession(frame,text_sys,data_lists,"prescription")
+        return self.yoloc_decctor.scan_prescription(frame)
 
 
     def detect_medicines(self, frame: np.ndarray) -> List[Dict]:
-        res = yolo_and_ocr_0(frame)
+        return self.detect_medicines(frame)
         
 
     def detect_hands(self, frame: np.ndarray) -> List[Dict]:
-        ...
+        return self.hand_detector.detect(frame)
     
 
-    def track_objects(self, medicines_detections: List[Dict], hands_detections: List[Dict]) -> None:
-        ...
+    def track_objects(self, hands_detections: List[Dict], medicines_detections: List[Dict]) -> None:
+        self.catch_checker.observe(hands_detections, medicines_detections)
     
     
     def catch_recognition(self) -> List[Dict]:
-        ...
-        
+        return self.catch_checker.check()
         
     def drug_match(self, medicine_cls, prescription):
-        med_name = get_drug_by_index(medicine_cls,data)
-        if med_name["ҩƷ��"] in prescription:
-            return True
-        else:
-            return False
+        return self.yoloc_decctor.drug_match(self, medicine_cls, prescription)
         
-test1 = MainProcess()
-test1.run()
+if __name__ == '__main__':
+    test1 = MainProcess()
+    test1.run()

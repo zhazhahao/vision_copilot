@@ -21,7 +21,7 @@ def init_args():
     # params for text detector
     parser.add_argument("--image_dir", type=str,default="")
     parser.add_argument("--det_algorithm", type=str, default='DB')
-    parser.add_argument("--det_model_path", type=str, default="pharmacy/models/ch_ptocr_v4_det_server_infer.pth")
+    parser.add_argument("--det_model_path", type=str, default="/home/portable-00/VisionCopilot/pharmacy/checkpoints/ocr/ch_ptocr_v4_det_server_infer.pth")
     parser.add_argument("--det_limit_side_len", type=float, default=960)
     parser.add_argument("--det_limit_type", type=str, default='max')
 
@@ -59,7 +59,7 @@ def init_args():
 
     # params for text recognizer
     parser.add_argument("--rec_algorithm", type=str, default='CRNN')
-    parser.add_argument("--rec_model_path", type=str, default="pharmacy/models/ch_ptocr_v4_rec_server_infer.pth")
+    parser.add_argument("--rec_model_path", type=str, default="/home/portable-00/VisionCopilot/pharmacy/checkpoints/ocr/ch_ptocr_v4_det_server_infer.pth")
     parser.add_argument("--rec_image_inverse", type=str2bool, default=True)
     parser.add_argument("--rec_image_shape", type=str, default="3, 48, 640")
     parser.add_argument("--rec_char_type", type=str, default='ch')
@@ -78,11 +78,11 @@ def init_args():
         "--rec_char_dict_path",
         type=str,
         default=os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
-                             'pytorchocr/utils/ppocr_keys_v1.txt'))
+                             '/home/portable-00/VisionCopilot/pharmacy/dependency/ocr/utils/ppocr_keys_v1.txt'))
 
     # params for text classifier
     parser.add_argument("--use_angle_cls", type=str2bool, default=False)
-    parser.add_argument("--cls_model_path", type=str,default="pharmacy/models/ch_ptocr_mobile_v2.0_cls_infer.pth")
+    parser.add_argument("--cls_model_path", type=str,default="/home/portable-00/VisionCopilot/pharmacy/checkpoints/ocr/ch_ptocr_mobile_v2.0_cls_infer.pth")
     parser.add_argument("--cls_image_shape", type=str, default="3, 48, 192")
     parser.add_argument("--label_list", type=list, default=['0', '180'])
     parser.add_argument("--cls_batch_num", type=int, default=6)
@@ -102,7 +102,7 @@ def init_args():
     parser.add_argument(
         "--e2e_char_dict_path", type=str,
         default=os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
-                             'pytorchocr/utils/ic15_dict.txt'))
+                             '/home/portable-00/VisionCopilot/pharmacy/dependency/ocr/utils/ic15_dict.txt'))
     parser.add_argument("--e2e_pgnet_valid_set", type=str, default='totaltext')
     parser.add_argument("--e2e_pgnet_polygon", type=bool, default=True)
     parser.add_argument("--e2e_pgnet_mode", type=str, default='fast')
@@ -113,8 +113,8 @@ def init_args():
     parser.add_argument("--sr_batch_num", type=int, default=1)
 
     # params .yaml
-    parser.add_argument("--det_yaml_path", type=str, default="pharmacy/configs/ocr/ch_PP-OCRv4_det_teacher.yml")
-    parser.add_argument("--rec_yaml_path", type=str, default="pharmacy/configs/ocr/ch_PP-OCRv4_rec_hgnet.yml")
+    parser.add_argument("--det_yaml_path", type=str, default="/home/portable-00/VisionCopilot/pharmacy/configs/ocr/ch_PP-OCRv4_det_student.yml")
+    parser.add_argument("--rec_yaml_path", type=str, default="/home/portable-00/VisionCopilot/pharmacy/configs/ocr/ch_PP-OCRv4_rec_hgnet.yml")
     parser.add_argument("--cls_yaml_path", type=str, default=None)
     parser.add_argument("--e2e_yaml_path", type=str, default=None)
     parser.add_argument("--sr_yaml_path", type=str, default=None)

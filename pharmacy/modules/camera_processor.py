@@ -7,7 +7,7 @@ import numpy as np
 import multiprocessing as mp
 
 from configs.video.video_config import *
-from pharmacy.utils.video.achieve_process import achieve_process
+from utils.video.achieve_process import achieve_process
 from modules.audio_sender import send_realtime_audio_to_rtsp,ffmpeg_audio_command
 from utils.video.remove_nblock import remove_nonblock
 from utils.video.jpeg_vailder import is_jpeg_header,is_jpeg_end,has_jpeg_end
@@ -24,6 +24,8 @@ class CameraProcessor:
         if os.path.exists(f"/dev/shm/{shm_name}"):
             os.remove(f"/dev/shm/{shm_name}")
         self.shm = shared_memory.SharedMemory("shared_image_memory",create=True,size=shared_memory_size)
+        self.start()
+        
     def image_put_thread(self,exit_flag):
         global try_num
             # 启动ffmpeg进程

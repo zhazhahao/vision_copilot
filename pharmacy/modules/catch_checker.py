@@ -1,21 +1,17 @@
 import numpy as np
-from typing import Dict, List
+from typing import List
 from qinglang.object_detection.object_tracker import ObjectTracker
-from qinglang.dataset.utils.utils import xywh2center, xywh2xyxy, check_bboxes_intersection
+from qinglang.dataset.utils.utils import xywh2xyxy, check_bboxes_intersection
 from qinglang.utils.utils import Config
-from qinglang.utils.math import euclidean_distance
+from qinglang.utils.mathematic import euclidean_distance
+
 
 class CatchChecker:
-    def __init__(self, missing_tolerance: int=3, search_depth: int=30, catch_threshold: int=25, speed_search_depth: int=5) -> None:
-        self.hand_tracker = ObjectTracker(120, 5, 100)
-        self.medicine_tracker = ObjectTracker(120, 5, 100)
+    def __init__(self) -> None:
+        self.hand_tracker = ObjectTracker()
+        self.medicine_tracker = ObjectTracker()
     
-        self.config = Config(
-            missing_tolerance = missing_tolerance,
-            search_depth = search_depth,
-            catch_threshold = catch_threshold,
-            speed_search_depth = speed_search_depth,
-        )
+        self.config = Config('/home/portable-00/VisionCopilot/pharmacy/configs/catch_check.yaml')
 
     def observe(self, hands: List, medicines: List) -> None:
         self.hand_tracker.update(hands)
@@ -40,8 +36,7 @@ class CatchChecker:
             
             if candidates:
                 medicines_catched.append(min(candidates, key=lambda medicine: np.mean([euclidean_distance(hand_node.speed, medicine_node.speed) for hand_node, medicine_node in zip(hand.trajectory[:self.config.speed_search_depth], medicine.trajectory[:self.config.speed_search_depth]) if hand_node and medicine_node])))
-                # print('v', [euclidean_distance(hand_node.speed, medicine_node.speed) for hand_node, medicine_node in zip(hand.trajectory[:1], medicines_catched[-1].trajectory[:1]) if hand_node and medicine_node])
-                # print('x', medicines_catched[-1].trajectory[0].speed if medicines_catched[-1].trajectory[0] else None)
+        
         return medicines_catched
 
 

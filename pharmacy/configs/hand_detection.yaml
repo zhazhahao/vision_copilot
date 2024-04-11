@@ -1,0 +1,4 @@
+class_id: 0
+confidence_threshold: 0.2
+device: cuda
+onnx_path: /home/portable-00/VisionCopilot/pharmacy/checkpoints/rtmdet
