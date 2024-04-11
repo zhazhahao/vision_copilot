@@ -1,0 +1,45 @@
+ffmpeg_audio_command:
+  - ffmpeg
+  - -loglevel 
+  - quiet
+  - -vn
+  - -re
+  - -f
+  - s16le
+  - -ar
+  - '44100'
+  - -ac
+  - '2'
+  - -i
+  - 
+  - -acodec
+  - aac
+  - -rtmp_buffer
+  - '100'
+  - -f
+  - rtsp
+  - {{ rtsp_url_placeholder }}
+
+ffmpeg_video_command:
+  - ffmpeg
+  - -loglevel 
+  - quiet
+  - -rtsp_transport
+  - udp
+  - -max_delay
+  - '0'
+  - -flags
+  - low_delay
+  - -fflags
+  - nobuffer
+  - -probesize
+  - 32M
+  - -c:v
+  - h264
+  - -i
+  - {{ rtsp_url_placeholder }}
+  - -f
+  - image2pipe
+  - -q:v
+  - '0'
+  - '-'
