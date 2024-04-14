@@ -1,5 +1,5 @@
 ffmpeg_audio_command:
-  - ffmpeg
+  - /usr/local/bin/ffmpeg
   - -loglevel 
   - quiet
   - -vn
@@ -21,11 +21,13 @@ ffmpeg_audio_command:
   - {{ rtsp_url_placeholder }}
 
 ffmpeg_video_command:
-  - ffmpeg
+  - /usr/local/bin/ffmpeg
+  - -vsync
+  - '0'
   - -loglevel 
-  - quiet
+  - error
   - -rtsp_transport
-  - udp
+  - tcp
   - -max_delay
   - '0'
   - -flags
@@ -40,6 +42,10 @@ ffmpeg_video_command:
   - {{ rtsp_url_placeholder }}
   - -f
   - image2pipe
+  - -fps_mode
+  - drop
+  - -preset:v
+  - ultrafast   # 设置编码速度为ultrafast
   - -q:v
   - '0'
   - '-'

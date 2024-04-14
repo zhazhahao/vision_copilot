@@ -7,9 +7,10 @@
 # Global settings -> General
 
 # Verbosity of the program; available values are "error", "warn", "info", "debug".
-logLevel: info
+logLevel: error
 # Destinations of log messages; available values are "stdout", "file" and "syslog".
-logDestinations: [stdout]
+# logDestinations: [stdout]
+logDestinations: [file]
 # If "file" is in logDestinations, this is the file which will receive the logs.
 logFile: mediamtx.log
 
@@ -136,9 +137,9 @@ authJWTJWKS:
 # Global settings -> API
 
 # Enable controlling the server through the API.
-api: no
+api: yes
 # Address of the API listener.
-apiAddress: :9997
+apiAddress: 0.0.0.0:9997
 
 ###############################################
 # Global settings -> Playback server
@@ -164,7 +165,7 @@ protocols: [udp, multicast, tcp]
 # Available values are "no", "strict", "optional".
 encryption: "no"
 # Address of the TCP/RTSP listener. This is needed only when encryption is "no" or "optional".
-rtspAddress: :8554
+rtspAddress: 0.0.0.0:8554
 # Address of the TCP/TLS/RTSPS listener. This is needed only when encryption is "strict" or "optional".
 rtspsAddress: :8322
 # Address of the UDP/RTP listener. This is needed only when "udp" is in protocols.
@@ -270,7 +271,7 @@ hlsDirectory: ''
 # Enable publishing and reading streams with the WebRTC protocol.
 webrtc: yes
 # Address of the WebRTC HTTP listener.
-webrtcAddress: :8889
+webrtcAddress: 0.0.0.0:8889
 # Enable TLS/HTTPS on the WebRTC server.
 webrtcEncryption: no
 # Path to the server key.
@@ -618,7 +619,8 @@ paths:
   # example:
   # my_camera:
   #   source: rtsp://my_camera
-
+  # stream01:
+  #   source: rtsp://192.168.0.101/live
   # Settings under path "all_others" are applied to all paths that
   # do not match another entry.
   all_others:

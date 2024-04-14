@@ -2,7 +2,7 @@ import json
 import traceback
 import cv2
 from modules.camera_processor import CameraProcessor
-from modules.ocr_processor import procession
+from pharmacy.utils.ocr_infer.ocr_processor import procession
 import utils.ocr_infer.pytorchocr_utility as utility
 from utils.yolv_infer.yolov_teller import tensor_converter ,get_drug_by_index ,find_medicine_by_name
 from utils.yolv_infer.curr_false import curr_false

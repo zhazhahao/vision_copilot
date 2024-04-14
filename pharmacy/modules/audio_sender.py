@@ -1,3 +1,4 @@
+import time
 import traceback
 
 from configs.video.audio_config import *
@@ -18,6 +19,9 @@ def send_realtime_audio_to_rtsp(ffmpeg_command,flag:mp.Value,exit_flag:mp.Value)
         process.start()
         while exit_flag:
             audio_data = generate_audio(durations, sample_rate, frequency) if flag.value else generate_audio(durations, sample_rate, frequency,100)
+            time.sleep(2) if flag.value else None
+            print(flag.value)
+            flag.value = 0
             with lock:
                 shared_audio_data.buf[:len(audio_data)] = audio_data
     except Exception:

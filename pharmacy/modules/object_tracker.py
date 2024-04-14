@@ -3,7 +3,7 @@ from typing import Union, List
 from itertools import takewhile
 from qinglang.data_structure.base import RollingArray
 from qinglang.dataset.utils.utils import xywh2center
-from qinglang.utils.math import euclidean_distance
+from qinglang.utils.mathematic import euclidean_distance
 from qinglang.utils.utils import Config, ClassDict
 
 
@@ -13,7 +13,7 @@ class TrackedObject:
         self.trajectory = RollingArray(memory_depth)
         
     def add_frame_data(self, bbox: Union[None, List, np.ndarray]) -> None:
-        data = bbox and ClassDict(
+        data = None if bbox is None else ClassDict(
             bbox = bbox,
             center = xywh2center(bbox),
             speed = [0, 0] if len(self.trajectory) == 0 else (xywh2center(bbox) - self.get_latest_valid_node().center) / (1 + self.lost_tracking_counts()),
@@ -47,11 +47,18 @@ class ObjectTracker:
             candidates = [detection_result for detection_result in detection_results if detection_result['category_id'] == tracked_object.category_id]
             candidates_distance = [euclidean_distance(xywh2center(target_bbox), xywh2center(candidate['bbox'])) for candidate in candidates]
             
-            if candidates_distance == [] or candidates_distance[nearest_idx := np.argmin(candidates_distance)] >= self.config.translation_threshold * (tracked_object.lost_tracking_counts() + 1):
+            # if candidates_distance == [] or candidates_distance[nearest_idx := np.argmin(candidates_distance)] >= self.config.translation_threshold * (tracked_object.lost_tracking_counts() + 1):
+            #     bbox = None
+            # else:
+            #     bbox = candidates[nearest_idx]['bbox']
+            #     detection_results.remove(candidates[nearest_idx])
+
+            if candidates_distance == [] or candidates_distance[np.argmin(candidates_distance)] >= self.config.translation_threshold * (tracked_object.lost_tracking_counts() + 1):
                 bbox = None
             else:
+                nearest_idx = np.argmin(candidates_distance)
                 bbox = candidates[nearest_idx]['bbox']
-                detection_results.remove(candidates[nearest_idx])
+                del detection_results[nearest_idx]
                 
             tracked_object.add_frame_data(bbox)
             

@@ -1,6 +1,8 @@
 import copy
 from functools import reduce
+import subprocess
 import traceback
+import signal
 
 import cv2
 import numpy as np
@@ -17,6 +19,7 @@ class CameraProcessor:
         self.camera_name = "FinalVersion"
         self.exit_flag = mp.Value("i", 0)  # 退出标志，0表示不退出，1表示退出
         self.infor_value = mp.Value("c", 0)
+        self.server_process = subprocess.Popen("./mediamtx",cwd=rtsp_server_path)
         self.processes = [
             mp.Process(target=self.image_put_thread,args=(self.exit_flag,)),
             mp.Process(target=send_realtime_audio_to_rtsp,args=(ffmpeg_audio_command,self.infor_value,self.exit_flag))
@@ -50,7 +53,7 @@ class CameraProcessor:
                         size_bytes = len(raw_image).to_bytes(5, byteorder='big')
                         self.shm.buf[:5] = size_bytes  # 将图像大小作为前五个字节存入共享内存
                         self.shm.buf[5:5+len(raw_image)] = raw_image  # 存入完整的 raw image 数据
-                        # print("Answer" + str(len(raw_image)))
+                        print("Answer" + str(len(raw_image)))
                         # frame += 1
                         # print(time.time() - a)
                     else:
@@ -80,9 +83,8 @@ class CameraProcessor:
             pass    
         self.shm.unlink()
         remove_nonblock(ffmpeg_process.stdout.fileno())
-        ffmpeg_process.stdout.flush()
-        ffmpeg_process.terminate()
-
+        ffmpeg_process.kill()
+        
     def start(self):
         try:
             for process in self.processes[:-1]:
@@ -94,8 +96,9 @@ class CameraProcessor:
     
     def end_process(self):
         self.exit_flag.value |= self.exit_flag.value
+        self.server_process.terminate()
         for process in self.processes:
-            process.terminate()
+            process.join()
         print("主进程退出")
     
     def achieve_image(self):
@@ -111,3 +114,5 @@ class CameraProcessor:
             return True,image
         return False,None
     
+    def send_wrong(self):
+        self.infor_value.value  = 1

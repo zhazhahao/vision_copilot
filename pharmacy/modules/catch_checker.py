@@ -1,6 +1,6 @@
 import numpy as np
 from typing import List
-from qinglang.object_detection.object_tracker import ObjectTracker
+from modules.object_tracker import ObjectTracker
 from qinglang.dataset.utils.utils import xywh2xyxy, check_bboxes_intersection
 from qinglang.utils.utils import Config
 from qinglang.utils.mathematic import euclidean_distance
@@ -8,10 +8,9 @@ from qinglang.utils.mathematic import euclidean_distance
 
 class CatchChecker:
     def __init__(self) -> None:
+        self.config = Config('/home/portable-00/VisionCopilot/pharmacy/configs/catch_check.yaml')
         self.hand_tracker = ObjectTracker(120, 5, 200)
         self.medicine_tracker = ObjectTracker(120, 5, 200)
-    
-        self.config = Config('/home/portable-00/VisionCopilot/pharmacy/configs/catch_check.yaml')
 
     def observe(self, hands: List, medicines: List) -> None:
         self.hand_tracker.update(hands)
