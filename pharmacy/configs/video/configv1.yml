@@ -15,7 +15,7 @@ ffmpeg_audio_command:
   - -ar
   - '16000' # Adjust audio sample rate to 16000Hz
   - -rtmp_buffer
-  - '100'
+  - '0'
   - -f
   - rtsp
   - {{ rtsp_url_placeholder }}

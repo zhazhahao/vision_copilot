@@ -10,7 +10,7 @@
 logLevel: debug
 # Destinations of log messages; available values are "stdout", "file" and "syslog".
 # logDestinations: [stdout]
-logDestinations: []
+logDestinations: [stdout]
 # If "file" is in logDestinations, this is the file which will receive the logs.
 logFile: mediamtx.log
 
