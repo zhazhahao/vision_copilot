@@ -34,9 +34,11 @@ if __name__ == "__main__":
     for p in processes:
         os.kill(p.pid, signal.SIGUSR1)
     
-    for p in processes:
-        event.wait()
-        
+    # for p in processes:
+    #     event.wait()
+
+    event.wait()    
+    
     time.sleep(1)
     
     # 重新设置事件并向所有子进程发送自定义信号（SIGUSR1）
@@ -48,6 +50,8 @@ if __name__ == "__main__":
     
     for p in processes:
         event.wait()
-    
+
+    time.sleep(1)
+
     for p in processes:
         p.release()
