@@ -2,12 +2,11 @@ import multiprocessing
 import signal
 import os
 import time
-from pharmacy.modules.yoloc_dector import YolovDector
 
 class MyProcess(multiprocessing.Process):
     def __init__(self, event) -> None:
         super(MyProcess, self).__init__()
-        self.yoloc_decctor = YolovDector()
+        self.event = event
         
     def run(self):
         signal.signal(signal.SIGUSR1, self.execute)
@@ -20,17 +19,7 @@ class MyProcess(multiprocessing.Process):
 
     def release(self):
         self.terminate()
-        
-    def yolo_detect(self, frame):
-        return self.yoloc_decctor.yolo_detect(self, frame)
 
-    def ocr_detect(self, frame):
-        return self.yoloc_decctor.ocr_detect(frame)
-    
-    def _scan_prescription(self, frame):
-        return self.yoloc_decctor.scan_prescription(frame)
-    
-    
 if __name__ == "__main__":
     # 创建进程池并启动子进程
     num_processes = 3  # 设置子进程数量
