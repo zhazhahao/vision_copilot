@@ -12,13 +12,14 @@ from utils.video.remove_nblock import remove_nonblock
 
 def send_audio_to_rtsp(ffmpeg_command, shared_audio_data:shared_memory.SharedMemory, exit_flag):
 
-    ffmpeg_process = subprocess.Popen(ffmpeg_command, stdin=subprocess.PIPE)
-    time.sleep(2)
     while not exit_flag.value:
         try:
             res = copy.deepcopy(shared_audio_data.buf.tobytes())
+            a = time.time()
             ffmpeg_process.stdin.write(res[:176400])
+            time.sleep(time.time() - a)
             ffmpeg_process.stdin.flush()
+            # time.sleep(2)
         except IOError:
             traceback.print_exc()
             continue

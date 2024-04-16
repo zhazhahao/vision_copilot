@@ -1,7 +1,5 @@
 ffmpeg_audio_command:
   - /usr/local/bin/ffmpeg
-  - -loglevel 
-  - quiet
   - -vn
   - -re
   - -f
@@ -14,6 +12,8 @@ ffmpeg_audio_command:
   - 
   - -acodec
   - aac
+  - -ar
+  - '16000' # Adjust audio sample rate to 16000Hz
   - -rtmp_buffer
   - '100'
   - -f
@@ -27,7 +27,7 @@ ffmpeg_video_command:
   - -loglevel 
   - error
   - -rtsp_transport
-  - tcp
+  - udp
   - -max_delay
   - '0'
   - -flags
@@ -46,6 +46,8 @@ ffmpeg_video_command:
   - drop
   - -preset:v
   - ultrafast   # 设置编码速度为ultrafast
+  - -tune:v
+  - zerolatency
   - -q:v
   - '0'
   - '-'

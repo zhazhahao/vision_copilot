@@ -1,4 +1,5 @@
 import traceback
+import numpy as np
 from qinglang.utils.utils import Config, load_json, load_txt
 
 from dependency.yolo.models.yolo.model import YOLO
@@ -19,31 +20,57 @@ class YolovDector:
         self.text_sys = TextSystem(utility.parse_args())
         self.data = load_json("/home/portable-00/VisionCopilot/pharmacy/database/medicine_database.json")
         self.data_lists = load_txt("/home/portable-00/VisionCopilot/pharmacy/database/medicine_names.txt")
+        self.reserve_bbox = []
         # self.back_current_shelf = ''
 
     def scan_prescription(self, frame):
         return procession(frame, self.text_sys, self.data_lists, "prescription"), self.data_lists[-2:]
 
+    
+    def yolo_detect(self, frame):
+        results = self.model(frame, verbose=False)
+        for result in results:
+                boxes = result.boxes
+                # probs = result.probs
+                cls, conf, xywh = boxes.cls, boxes.conf, boxes.xywh
+                if cls.__len__() == 0:
+                    pass
+                else:
+                    return [tensor_converter(cls), tensor_converter(xywh)]
+      
+      
+    def ocr_detect(self, frame):
+        matching_medicines = []
+        ocr_dt_boxes, ocr_rec_res = procession(frame, self.text_sys, self.data_lists, "process")
+        for i in range(len(ocr_dt_boxes)):
+            matching_medicines.append(find_medicine_by_name(self.data, curr_false(ocr_rec_res[i][0], self.data_lists[:-2])))
+        return matching_medicines            
     def detect_medicines(self, frame):
         try:
             # ocr
+            matching_medicines = None
             ocr_dt_boxes, ocr_rec_res = procession(frame, self.text_sys, self.data_lists, "process")
             for i in range(len(ocr_dt_boxes)):
-                matching_medicines = find_medicine_by_name(self.data,
+                matching_medicines  = find_medicine_by_name(self.data,
                                                            curr_false(ocr_rec_res[i][0], self.data_lists[:-2]))
 
                 if matching_medicines:
+                    matching_medicines = matching_medicines
+                    pos = i
                     ocr_current_shelf = matching_medicines.get("货架号")  # or other info in the dataset
+                    break
                 else:
                     ocr_current_shelf = ''
             # yolo
-            results = self.model(frame, verbose=False)
+            results = self.model(frame, verbose=True)
             for result in results:
                 boxes = result.boxes
                 # probs = result.probs
                 cls, conf, xywh = boxes.cls, boxes.conf, boxes.xywh  # get info needed
                 # print([tensor_converter(cls), tensor_converter(xywh)])
                 if cls.__len__() == 0:
+                    if matching_medicines is not None:
+                        return [[matching_medicines['index'] - 1],self.convert_bbox_to_yolov(ocr_dt_boxes[pos],frame.shape[0],frame.shape[1])]
                     pass
                 else:
                     current_drug = get_drug_by_index(int(cls[0]), self.data)
@@ -64,4 +91,23 @@ class YolovDector:
             return True
         else:
             return False
+    def convert_bbox_to_yolov(self,bbox, image_width, image_height):
+        yolo_boxes = []
+        # 计算边界框的中心点坐标
+        center_x = np.mean(bbox[:, 0])
+        center_y = np.mean(bbox[:, 1])
     
+        # 计算边界框的宽度和高度
+        width = np.max(bbox[:, 0]) - np.min(bbox[:, 0])
+        height = np.max(bbox[:, 1]) - np.min(bbox[:, 1])
+    
+        # 将边界框坐标转换为 YOLOv3 格式（绝对像素坐标）
+        yolo_x = center_x 
+        yolo_y = center_y 
+        yolo_width = width * 3
+        yolo_height = height * 3
+    
+            # 将转换后的边界框添加到列表中
+        yolo_boxes.append([yolo_x, yolo_y, yolo_width, yolo_height])
+    
+        return yolo_boxes

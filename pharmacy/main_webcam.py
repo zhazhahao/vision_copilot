@@ -9,7 +9,6 @@ from modules.camera_processor import CameraProcessor
 
 class MainProcess:
     def __init__(self) -> None:
-        # self.cam_stream = cv2.VideoCapture("/home/portable-00/VisionCopilot/test/20240322_151423.mp4")
         self.cam_stream = CameraProcessor()
         self.yoloc_decctor = YolovDector()
         self.hand_detector = HandDetector()
@@ -18,12 +17,10 @@ class MainProcess:
     def run(self):
         while True:
             frame: np.ndarray = self.capture_frame()
-            prescription , res_array = self.yoloc_decctor.scan_prescription(frame)
-            print(prescription)
-            print(res_array)
+            prescription, res_array = self.yoloc_decctor.scan_prescription(frame)
             if res_array[0][0] in prescription and res_array[1][0] in prescription:
                 break
-            
+            check_list = []
         while True:
             frame: np.ndarray = self.capture_frame()
 
@@ -33,14 +30,12 @@ class MainProcess:
             if medicines_detections is None or medicines_detections[0] == 'nomatch':
                 continue
 
-            # drug_match: bool = self.yoloc_decctor.drug_match(medicines_detections[0][0], prescription)
-
             hands_detections = self.detect_hands(frame)
             print(rf"Hand detection result: ")
             for i, hand in enumerate(hands_detections):
                 print(rf"{i}: Bbox {np.array(hand['bbox'], dtype=int)}")
-                
-            offer_value = [{"category_id":int(medicines_detections[0][0]),"bbox":medicines_detections[1][0]}]
+
+            offer_value = [{"category_id": int(medicines_detections[0][0]), "bbox": medicines_detections[1][0]}]
             print(rf"Medicines detection result: ")
             for i, medicine in enumerate(offer_value):
                 print(rf"{i}: Bbox {np.array(medicine['bbox'], dtype=int)}")
@@ -52,6 +47,10 @@ class MainProcess:
             print(rf"Catch check result: ")
             for i, check_result in enumerate(check_results):
                 print(rf"{i}: {check_result.category_id}")
+                check_list.append[check_result.category_id] if self.medicine_match(check_result.category_id, prescription) and check_result.category_id not in check_list else self.cam_stream.send_wrong()
+                if check_list.__len__() == check_results.__len__():
+                    print("All Done")
+                    break      
 
     def capture_frame(self) -> np.ndarray:
         while True:

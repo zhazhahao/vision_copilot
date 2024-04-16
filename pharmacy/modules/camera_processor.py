@@ -15,15 +15,21 @@ from utils.video.remove_nblock import remove_nonblock
 from utils.video.jpeg_vailder import is_jpeg_header,is_jpeg_end,has_jpeg_end
 
 class CameraProcessor:
-    def __init__(self):
+    def __init__(self,doaudio=True):
         self.camera_name = "FinalVersion"
+        self.doaudio = doaudio
         self.exit_flag = mp.Value("i", 0)  # 退出标志，0表示不退出，1表示退出
         self.infor_value = mp.Value("c", 0)
         self.server_process = subprocess.Popen("./mediamtx",cwd=rtsp_server_path)
-        self.processes = [
-            mp.Process(target=self.image_put_thread,args=(self.exit_flag,)),
-            mp.Process(target=send_realtime_audio_to_rtsp,args=(ffmpeg_audio_command,self.infor_value,self.exit_flag))
-        ]
+        if doaudio:
+            self.processes = [
+                mp.Process(target=self.image_put_thread,args=(self.exit_flag,)),
+                mp.Process(target=send_realtime_audio_to_rtsp,args=(ffmpeg_audio_command,self.infor_value,self.exit_flag))
+            ]
+        else:
+            self.processes = [
+                mp.Process(target=self.image_put_thread,args=(self.exit_flag,)),
+                ]   
         if os.path.exists(f"/dev/shm/{shm_name}"):
             os.remove(f"/dev/shm/{shm_name}")
         self.shm = shared_memory.SharedMemory("shared_image_memory",create=True,size=shared_memory_size)
@@ -53,7 +59,7 @@ class CameraProcessor:
                         size_bytes = len(raw_image).to_bytes(5, byteorder='big')
                         self.shm.buf[:5] = size_bytes  # 将图像大小作为前五个字节存入共享内存
                         self.shm.buf[5:5+len(raw_image)] = raw_image  # 存入完整的 raw image 数据
-                        print("Answer" + str(len(raw_image)))
+                        # print("Answer" + str(len(raw_image)))
                         # frame += 1
                         # print(time.time() - a)
                     else:
@@ -87,10 +93,13 @@ class CameraProcessor:
         
     def start(self):
         try:
-            for process in self.processes[:-1]:
-                process.daemon = True
-                process.start()
-            self.processes[-1].start()
+            if self.doaudio:
+                for process in self.processes[:-1]:
+                    process.daemon = True
+                    process.start()
+                self.processes[-1].start()
+            else:
+                self.processes[0].start()
         except Exception as e:
             print(e)
     
@@ -115,4 +124,5 @@ class CameraProcessor:
         return False,None
     
     def send_wrong(self):
+        # print("Got wrong medicine")
         self.infor_value.value  = 1

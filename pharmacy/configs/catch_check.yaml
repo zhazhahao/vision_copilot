@@ -1,4 +1,4 @@
-catch_threshold: 15
-missing_tolerance: 3
-search_depth: 20
-speed_search_depth: 5
+catch_threshold: 5
+missing_tolerance: 5
+search_depth: 15
+speed_search_depth: 3

@@ -1,8 +1,8 @@
+import subprocess
 import time
 import traceback
 
 from configs.video.audio_config import *
-from utils.video.send_audio_to_rtsp import send_audio_to_rtsp
 from utils.video.generate_fake_audio import generate_audio
 
 
@@ -12,18 +12,18 @@ from multiprocessing import shared_memory
 # 生成并发送实时音频流到 RTSP 服务器
 def send_realtime_audio_to_rtsp(ffmpeg_command,flag:mp.Value,exit_flag:mp.Value):
     try:
+        ffmpeg_process = subprocess.Popen(ffmpeg_command, stdin=subprocess.PIPE)
         shared_audio_data = shared_memory.SharedMemory(create=True, size=176401)  # 创建共享内存
-        audio_data = generate_audio(durations,sample_rate,frequency,100)
-        shared_audio_data.buf[:len(audio_data)] = audio_data         
-        process=mp.Process(target=send_audio_to_rtsp, args=(ffmpeg_command, shared_audio_data,exit_flag))
-        process.start()
+        audio_data = generate_audio(durations,sample_rate,frequency,0)    
         while exit_flag:
-            audio_data = generate_audio(durations, sample_rate, frequency) if flag.value else generate_audio(durations, sample_rate, frequency,100)
-            time.sleep(2) if flag.value else None
+            if flag.value == b'\x00':
+                audio_data = generate_audio(durations, sample_rate, frequency,deleash=0)
+            else:
+                audio_data = generate_audio(durations, sample_rate, frequency,deleash=1)
+            ffmpeg_process.stdin.write(audio_data)
             print(flag.value)
-            flag.value = 0
-            with lock:
-                shared_audio_data.buf[:len(audio_data)] = audio_data
+            flag.value = b'\x00'
+                # print(audio_data)
     except Exception:
         traceback.print_exc()
     except KeyboardInterrupt:

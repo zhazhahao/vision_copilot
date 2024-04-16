@@ -25,8 +25,7 @@ class TextSystem(object):
         self.text_recognizer = predict_rec.TextRecognizer(args, **kwargs)
         self.use_angle_cls = args.use_angle_cls
         self.drop_score = args.drop_score
-        if self.use_angle_cls:
-            self.text_classifier = predict_cls.TextClassifier(args, **kwargs)
+        self.text_classifier = predict_cls.TextClassifier(args, **kwargs)
 
 
     def get_rotate_crop_image(self, img, points):
@@ -83,7 +82,6 @@ class TextSystem(object):
             tmp_box = copy.deepcopy(dt_boxes[bno])
             img_crop = self.get_rotate_crop_image(ori_im, tmp_box)
             img_crop_list.append(img_crop)
-        if self.use_angle_cls:
             img_crop_list, angle_list, elapse = self.text_classifier(
                 img_crop_list)
 

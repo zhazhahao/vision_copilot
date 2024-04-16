@@ -17,7 +17,7 @@ class MainProcess:
         self.catch_checker = CatchChecker()
 
     def run(self):
-        prescription = ["曲前列尼尔注射液", "速碧林(那屈肝素钙注射液)", "依诺肝素钠注射液"]
+        prescription = ["曲前列尼尔注射液", "速碧林(那屈肝素钙注射液)", "依诺肝素钠注射液","注射用青霉素钠","注射用头孢唑林钠"]
         
         for frame_id, frame in enumerate(self.video_flow):
             print(rf"-------------------------------------------- Frame {frame_id} --------------------------------------------")
@@ -45,7 +45,10 @@ class MainProcess:
             print(rf"Catch check result: ")
             for i, check_result in enumerate(check_results):
                 print(rf"{i}: {check_result.category_id}")
-              
+                if self.medicine_match(check_result.category_id, prescription):
+                    prescription.remove
+                    
+                    
     def scan_prescription(self, frame: np.ndarray) -> List[Any]:
         return self.yoloc_decctor.scan_prescription(frame)
 
@@ -65,8 +68,8 @@ class MainProcess:
     def catch_recognition(self) -> List[Dict]:
         return self.catch_checker.check()
         
-    def drug_match(self, medicine_cls, prescription):
-        return self.yoloc_decctor.drug_match(self, medicine_cls, prescription)
+    def medicine_match(self, medicine_cls, prescription):
+        return self.yoloc_decctor.drug_match(medicine_cls, prescription)
         
 if __name__ == '__main__':
     test1 = MainProcess()

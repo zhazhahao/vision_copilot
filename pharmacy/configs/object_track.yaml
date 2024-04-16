@@ -1,3 +1,3 @@
-decay_time: 5
-tracking_depth: 120
-pixel_shift_threshold: 100
+decay_time: 10
+tracking_depth: 300
+pixel_shift_threshold: 150

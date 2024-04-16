@@ -1,3 +1,4 @@
+import time
 import cv2
 from modules.camera_processor import CameraProcessor
 
@@ -5,6 +6,8 @@ from modules.camera_processor import CameraProcessor
 if __name__ == "__main__":
     camera = CameraProcessor()
     camera.start()
+    a = time.time()
+    print(a)
     while(True):
         try:
             bools,mat = camera.achieve_image()
@@ -15,6 +18,8 @@ if __name__ == "__main__":
             resized_image = cv2.resize(mat, dim, interpolation=cv2.INTER_AREA)
             if bools:
                 cv2.imshow("win_name",resized_image)
+            if time.time() - a > 10:
+                # print(2222222222222222)
                 camera.send_wrong()
             if cv2.waitKey(1) & 0xFF == ord('q'):
                 break

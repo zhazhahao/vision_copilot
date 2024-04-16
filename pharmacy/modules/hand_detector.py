@@ -5,10 +5,9 @@ from mmdeploy_runtime import Detector
 from qinglang.utils.utils import Config
 from qinglang.hand_pose_estimation.nms import nms
 from qinglang.dataset.utils.utils import xyxy2xywh
-from qinglang.dataset.utils.utils import plot_xyxy
+from qinglang.dataset.utils.utils import plot_xywh
 import os, sys
 
-sys.path.append('/home/portable-00/VisionCopilot/pharmacy/')
 
 class HandDetector:
     def __init__(self) -> None:
@@ -23,20 +22,32 @@ class HandDetector:
 
 
 if __name__ == '__main__':
-    from camera_processor import CameraProcessor
-    hand_detector = HandDetector()
-    cam_stream = CameraProcessor()
     hand_metainfo = Config(rf'/home/portable-00/lab/perception/qinglang/data_structure/hand/metainfo/COCO WholeBody.yaml')
+    from qinglang.data_structure.video.utils.utils import VideoFlow
 
-    while True:
-        valid, frame = cam_stream.achieve_image()
-        if not valid:
-            continue
+    hand_detector = HandDetector()
 
+    for frame in VideoFlow("/home/portable-00/VisionCopilot/pharmacy/20240313_160556/20240313_160556.mp4"):
         results = hand_detector.detect(frame)
         for result in results:
-            plot_xyxy(frame, np.array(result['bbox'], dtype=int))
-        cv2.imshow("img",frame)
+            plot_xywh(frame, np.array(result['bbox'], dtype=int))
+        
+        cv2.imshow('frame', frame)
+        cv2.waitKey(10)
+        
+    
+    # from camera_processor import CameraProcessor
+    # cam_stream = CameraProcessor()
 
-        if cv2.waitKey(1) & 0xFF == ord('q'):
-            break
+    # while True:
+    #     valid, frame = cam_stream.achieve_image()
+    #     if not valid:
+    #         continue
+
+    #     results = hand_detector.detect(frame)
+    #     for result in results:
+    #         plot_xyxy(frame, np.array(result['bbox'], dtype=int))
+    #     cv2.imshow("img",frame)
+
+    #     if cv2.waitKey(1) & 0xFF == ord('q'):
+    #         break
