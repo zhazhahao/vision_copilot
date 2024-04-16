@@ -13,9 +13,38 @@ from utils.video.achieve_process import achieve_process
 from modules.audio_sender import send_realtime_audio_to_rtsp,ffmpeg_audio_command
 from utils.video.remove_nblock import remove_nonblock
 from utils.video.jpeg_vailder import is_jpeg_header,is_jpeg_end,has_jpeg_end
+from qinglang.data_structure.video.video_base import VideoFlow
 
 
-class CameraProcessor:
+class CameraBase:
+    def __init__(self) -> None:
+        ...
+
+    def __iter__(self) -> object:       
+        ...
+
+    def __next__(self) -> np.ndarray:
+        ...
+    
+    def beep(self) -> None:
+        ...
+
+    def release(self) -> None:
+        ...
+
+
+class VirtualCamera(VideoFlow, CameraBase):
+    def __init__(self, source: str) -> None:
+        VideoFlow.__init__()
+    
+    def __iter__(self) -> object:
+        return VideoFlow.__iter__()
+    
+    def __next__(self) -> np.ndarray:
+        return VideoFlow.__next__()
+
+
+class DRIFTX3:
     def __init__(self,doaudio=True):
         self.camera_name = "FinalVersion"
         self.doaudio = doaudio
@@ -127,3 +156,9 @@ class CameraProcessor:
     def send_wrong(self):
         # print("Got wrong medicine")
         self.infor_value.value  = 1
+
+
+if __name__ == '__main__':
+    vc = VirtualCamera("/mnt/nas/datasets/Pharmacy_for_label/20240313/20240313_160556/20240313_160556.mp4")
+    for frame in vc:
+        print(vc)
