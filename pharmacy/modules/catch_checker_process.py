@@ -15,6 +15,6 @@ class CatchCheckerProcess(multiprocessing.Process):
             signal.pause()
 
     def execute(self, *args) -> None:
-        
+        print("excuted")
         self.inference_event.set()
     

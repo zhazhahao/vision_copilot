@@ -1,22 +1,15 @@
-import os
-import time
-import cv2
-import sys
-import signal
 import multiprocessing
 import numpy as np
-from typing import Union, List, Dict, Any
-from modules.catch_checker import CatchChecker
-from pharmacy.modules.drug_detector_process import DrugDetectorProcess
-from modules.hand_detector_process import HandDetectorProcess
 from modules.cameras import VirtualCamera
-from qinglang.dataset.utils.utils import plot_xywh, centerwh2xywh
+from modules.catch_checker import CatchChecker
+from modules.drug_detector_process import DrugDetectorProcess
+from modules.hand_detector_process import HandDetectorProcess
 from qinglang.utils.utils import ClassDict
 
 
 class MainProcess:
     def __init__(self) -> None:
-        self.stream = VirtualCamera()
+        self.stream = VirtualCamera("/mnt/nas/datasets/Pharmacy_for_label/20240313/20240313_160556/20240313_160556.mp4")
 
         self.init_shared_variables()
         self.init_subprocess()
@@ -24,15 +17,16 @@ class MainProcess:
         self.catch_checker = CatchChecker()
     
     def init_shared_variables(self):
+        self.frame_shared_array = multiprocessing.Array('B', 1920 * 1080 * 3)
         self.inference_event = multiprocessing.Event()
-        self.frame_inputs = multiprocessing.Queue()
-        self.hand_detection_outputs = multiprocessing.Queue()
-        self.drug_detection_outputs = multiprocessing.Queue()
+        self.done_barrier = multiprocessing.Barrier(3)
+        self.hand_detection_queue = multiprocessing.Queue()
+        self.drug_detection_queue = multiprocessing.Queue()
 
     def init_subprocess(self) -> None:
         self.subprocesses = ClassDict(
-            drug_detector = DrugDetectorProcess(self.inference_event),
-            hand_detector = HandDetectorProcess(self.inference_event),
+            drug_detector = DrugDetectorProcess(self.inference_event, self.done_barrier, self.frame_shared_array, self.drug_detection_queue),
+            hand_detector = HandDetectorProcess(self.inference_event, self.done_barrier, self.frame_shared_array, self.hand_detection_queue),
         )
 
         for p in self.subprocesses.values():
@@ -41,21 +35,32 @@ class MainProcess:
     def run(self):
         for frame in self.stream:
             self.share_frame(frame)
+            
+            hand_detection_results, drug_detection_results = self.parallel_inference()
+            
+            print(hand_detection_results)
 
-            for p in self.subprocesses.values():
-                os.kill(p.pid, signal.SIGUSR1)
+            # self.catch_checker.observe(hand_detection_results, drug_detection_results)
+            # check_results = self.catch_checker.check()
 
-            self.inference_event.wait()
-
-            hand_detection_results = self.hand_detection_outputs.get()
-            drug_detection_results = self.drug_detection_outputs.get()
-
-            self.catch_checker.observe(hand_detection_results, drug_detection_results)
-            check_results = self.catch_checker.check()
-    
     def share_frame(self, frame: np.ndarray) -> None:
-        ...
+        np.copyto(np.frombuffer(self.frame_shared_array.get_obj(), dtype=np.uint8), frame.flatten())
+
+    def parallel_inference(self):
+        # start parallel inference
+        self.inference_event.set()
+        self.done_barrier.wait()
         
+        # finish parallel inference
+        self.inference_event.clear()
+        self.done_barrier.reset()
+        
+        # get inference results
+        hand_detection_results = self.hand_detection_queue.get()
+        drug_detection_results = self.drug_detection_queue.get()
+        
+        return hand_detection_results, drug_detection_results
+
 if __name__ == '__main__':
     test1 = MainProcess()
     test1.run()
