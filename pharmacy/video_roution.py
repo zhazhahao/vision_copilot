@@ -18,11 +18,9 @@ if __name__ == "__main__":
             resized_image = cv2.resize(mat, dim, interpolation=cv2.INTER_AREA)
             if bools:
                 cv2.imshow("win_name",resized_image)
-            if time.time() - a > 10 and time.time() - a < 14:
-                print(2222222222222222)
-                camera.send_wrong()
             if cv2.waitKey(1) & 0xFF == ord('q'):
                 break
+            
         except KeyboardInterrupt:
             print("KeyBoardInterruption")
             break

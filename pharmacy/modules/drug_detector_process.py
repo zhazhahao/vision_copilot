@@ -22,6 +22,10 @@ class DrugDetectorProcess(multiprocessing.Process):
             self.inference_event.wait()
             self.execute()
     
+    def meddetect(self, frame):
+        result = self.yolodetect.yolo_detect(frame=frame)
+        return result
+    
     def execute(self) -> None:
         image = np.frombuffer(self.frame_shared_array.get_obj(), dtype=np.uint8).reshape((1080, 1920, 3))
         

@@ -1,19 +1,37 @@
 ffmpeg_audio_command:
   - /usr/local/bin/ffmpeg
-  - -vn
+  - -loglevel 
+  - error
   - -re
+  - -vn
+  - -f
+  - lavfi
+  - -i
+  - anullsrc=channel_layout=stereo:sample_rate=44100
   - -f
   - s16le
+  - -probesize 
+  - '32'
+  - -flags
+  - low_delay
+  - -fflags
+  - nobuffer
   - -ar
   - '44100'
   - -ac
   - '2'
   - -i
   - 
+  - -filter_complex
+  - "[1:a][0:a]amix=inputs=2:duration=longest"
+  - -max_delay 
+  - '0'
+  - -fps_mode
+  - drop
   - -acodec
   - aac
   - -ar
-  - '16000' # Adjust audio sample rate to 16000Hz
+  - '16000' 
   - -rtmp_buffer
   - '0'
   - -f
@@ -22,10 +40,12 @@ ffmpeg_audio_command:
 
 ffmpeg_video_command:
   - /usr/local/bin/ffmpeg
-  - -vsync
-  - '0'
+  - -hwaccel 
+  - auto
   - -loglevel 
   - error
+  - -vsync
+  - '0'
   - -rtsp_transport
   - udp
   - -max_delay
@@ -35,7 +55,7 @@ ffmpeg_video_command:
   - -fflags
   - nobuffer
   - -probesize
-  - 32M
+  - 300M
   - -c:v
   - h264
   - -i

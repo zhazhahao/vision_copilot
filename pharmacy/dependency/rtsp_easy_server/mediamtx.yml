@@ -10,14 +10,14 @@
 logLevel: debug
 # Destinations of log messages; available values are "stdout", "file" and "syslog".
 # logDestinations: [stdout]
-logDestinations: [stdout]
+logDestinations: []
 # If "file" is in logDestinations, this is the file which will receive the logs.
 logFile: mediamtx.log
 
 # Timeout of read operations.
-readTimeout: 10s
+readTimeout: 100000000s
 # Timeout of write operations.
-writeTimeout: 10s
+writeTimeout: 1000000000s
 # Size of the queue of outgoing packets.
 # A higher value allows to increase throughput, a lower value allows to save RAM.
 writeQueueSize: 512
@@ -160,7 +160,7 @@ rtsp: yes
 # UDP-multicast allows to save bandwidth when clients are all in the same LAN.
 # TCP is the most versatile, and does support encryption.
 # The handshake is always performed with TCP.
-protocols: [udp, multicast]
+protocols: [udp, multicast, tcp]
 # Encrypt handshakes and TCP streams with TLS (RTSPS).
 # Available values are "no", "strict", "optional".
 encryption: "no"

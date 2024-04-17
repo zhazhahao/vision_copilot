@@ -73,13 +73,18 @@ class CameraProcessor:
                                 back_image = raw_image[png_end[1]+1:]
                                 size_bytes = len(res_image).to_bytes(5, byteorder='big')
                                 self.shm.buf[:5] = size_bytes  # 将图像大小作为前五个字节存入共享内存
-                                self.shm.buf[5:5+len(res_image)] = res_image  # 存入完整的 raw image 数据
+                                try:
+                                    self.shm.buf[5:5+len(res_image)] = res_image  # 存入完整的 raw image 数据
+                                except:
+                                    print(res_image)
                                 # print("Late Answer" +str(len(res_image)))
                                 # print(time.time() - a)
                             else:
                                 back_image = back_image + raw_image
                     try_num = 0
                 else:
+                    
+                    print(try_num)
                     try_num += 1
                 # 显示图像
             exit_flag.value = 0
