@@ -7,7 +7,7 @@ import cv2
 import torch
 import numpy as np
 from numpy.fft import ifft
-from ocr.utils.poly_nms import poly_nms, valid_boundary
+from ocr.toolkit.poly_nms import poly_nms, valid_boundary
 
 
 def fill_hole(input_mask):

@@ -1,6 +1,6 @@
 import multiprocessing
 import numpy as np
-from mmdeploy_runtime import Detector
+# from mmdeploy_runtime import Detector
 from qinglang.utils.utils import Config
 from qinglang.dataset.utils.utils import nms, xyxy2xywh
 import cv2
@@ -15,7 +15,7 @@ class HandDetectorProcess(multiprocessing.Process):
         
         self.config = Config('/home/portable-00/VisionCopilot/pharmacy/configs/hand_detection.yaml')
         self.source = Config('/home/portable-00/VisionCopilot/pharmacy/configs/source.yaml')
-        self.detector = Detector(model_path=self.source.onnx_path, device_name=self.config.device)
+        # self.detector = Detector(model_path=self.source.onnx_path, device_name=self.config.device)
 
         super().__init__()
 
@@ -25,12 +25,12 @@ class HandDetectorProcess(multiprocessing.Process):
             self.execute()
     
     def execute(self) -> None:
-        image_ = np.frombuffer(self.frame_shared_array.get_obj(), dtype=np.uint8).reshape((1080, 1920, 3))
-        image = cv2.imread("/home/qinglang/lab/VisionCopilot/pharmacy/image.png")
-        bboxes, labels, _ = self.detector(image)
-        bboxes = bboxes[np.logical_and(labels == self.config.class_id, bboxes[..., 4] > self.config.confidence_threshold)]
-        bboxes = bboxes[nms(bboxes, self.config.overlap_threshold)]
-        hand_detection_result = [{'bbox': xyxy2xywh(bbox[:4]), 'category_id': 0} for bbox in bboxes]
+        image = np.frombuffer(self.frame_shared_array.get_obj(), dtype=np.uint8).reshape((1080, 1920, 3))
+        # bboxes, labels, _ = self.detector(image)
+        # bboxes = bboxes[np.logical_and(labels == self.config.class_id, bboxes[..., 4] > self.config.confidence_threshold)]
+        # bboxes = bboxes[nms(bboxes, self.config.overlap_threshold)]
+        # hand_detection_result = [{'bbox': xyxy2xywh(bbox[:4]), 'category_id': 0} for bbox in bboxes]
+        hand_detection_result = 'hand detection excuted'
         self.hand_detection_outputs.put(hand_detection_result)
         
         self.done_barrier.wait()

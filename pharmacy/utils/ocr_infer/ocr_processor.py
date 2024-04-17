@@ -8,6 +8,7 @@ def procession(img, text_sys, data_lists, options="process"):
     with torch.no_grad():
         dt_boxes, rec_res = text_sys(img)
         if options == "prescription":
+            print(rec_res)
             for i, (text, score) in enumerate(rec_res):
                 text = curr_false(text, data_lists,0.6)
                 rec_res[i] = (text, score)

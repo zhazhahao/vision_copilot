@@ -25,8 +25,9 @@ class MainProcess:
         while True:
             frame: np.ndarray = self.capture_frame()
             prescription, res_array = self.yoloc_decctor.scan_prescription(frame)
-            
-            print(prescription)
+            if prescription.__len__() > 5:
+                cv2.imwrite("1.jpg",frame)
+                print(prescription)
             if res_array[0][0] in prescription or res_array[1][0] in prescription:
                 # print(opportunity)
                 for result in prescription:

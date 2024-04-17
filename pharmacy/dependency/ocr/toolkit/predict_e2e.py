@@ -16,7 +16,7 @@ import sys
 import torch
 from ocr.base_ocr_v20 import BaseOCRV20
 import utils.ocr_infer.pytorchocr_utility as utility
-from ocr.utils.utility import get_image_file_list, check_and_read_gif
+from ocr.toolkit.utility import get_image_file_list, check_and_read_gif
 from ocr.data import create_operators, transform
 from ocr.postprocess import build_post_process
 

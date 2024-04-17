@@ -12,7 +12,7 @@ import json
 import torch
 from dependency.ocr.base_ocr_v20 import BaseOCRV20
 import utils.ocr_infer.pytorchocr_utility as utility
-from dependency.ocr.utils.utility import get_image_file_list, check_and_read_gif
+from dependency.ocr.toolkit.utility import get_image_file_list, check_and_read_gif
 from dependency.ocr.data import create_operators, transform
 from dependency.ocr.postprocess import build_post_process
 

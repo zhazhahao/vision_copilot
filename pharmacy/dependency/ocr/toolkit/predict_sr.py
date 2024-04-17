@@ -30,8 +30,8 @@ import torch
 from ocr.base_ocr_v20 import BaseOCRV20
 import utils.ocr_infer.pytorchocr_utility as utility
 from ocr.postprocess import build_post_process
-from ocr.utils.logging import get_logger
-from ocr.utils.utility import get_image_file_list, check_and_read
+from ocr.toolkit.logging import get_logger
+from ocr.toolkit.utility import get_image_file_list, check_and_read
 
 logger = get_logger()
 

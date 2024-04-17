@@ -78,7 +78,7 @@ def init_args():
         "--rec_char_dict_path",
         type=str,
         default=os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
-                             '/home/portable-00/VisionCopilot/pharmacy/dependency/ocr/utils/ppocr_keys_v1.txt'))
+                             '/home/portable-00/VisionCopilot/pharmacy/dependency/ocr/toolkit/ppocr_keys_v1.txt'))
 
     # params for text classifier
     parser.add_argument("--use_angle_cls", type=str2bool, default=False)

@@ -14,7 +14,7 @@ import utils.ocr_infer.pytorchocr_utility as utility
 import utils.ocr_infer.predict_rec as predict_rec
 import utils.ocr_infer.predict_det as predict_det
 import utils.ocr_infer.predict_cls as predict_cls
-from dependency.ocr.utils.utility import get_image_file_list, check_and_read_gif
+from dependency.ocr.toolkit.utility import get_image_file_list, check_and_read_gif
 from utils.ocr_infer.pytorchocr_utility import draw_ocr_box_txt
 
 
