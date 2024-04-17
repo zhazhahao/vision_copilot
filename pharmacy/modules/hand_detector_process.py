@@ -5,6 +5,7 @@ from qinglang.utils.utils import Config
 from qinglang.dataset.utils.utils import nms, xyxy2xywh
 import cv2
 
+
 class HandDetectorProcess(multiprocessing.Process):
     def __init__(self, inference_event: multiprocessing.Event, done_barrier: multiprocessing.Barrier, frame_shared_array: multiprocessing.Array, hand_detection_outputs: multiprocessing.Queue) -> None:
         self.inference_event = inference_event

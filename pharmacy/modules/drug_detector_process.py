@@ -1,6 +1,5 @@
-import signal
 import multiprocessing
-import time
+import numpy as np
 
 
 class DrugDetectorProcess(multiprocessing.Process):
@@ -10,7 +9,12 @@ class DrugDetectorProcess(multiprocessing.Process):
         self.done_barrier = done_barrier
         self.frame_shared_array = frame_shared_array
         self.drug_detection_outputs = drug_detection_outputs
+
+        ############### YOUR CODE HERE ###############
         
+        
+        ############### YOUR CODE HERE ###############
+
         super().__init__()
 
     def run(self):
@@ -19,8 +23,14 @@ class DrugDetectorProcess(multiprocessing.Process):
             self.execute()
     
     def execute(self) -> None:
-        print("drug excuted")
+        image = np.frombuffer(self.frame_shared_array.get_obj(), dtype=np.uint8).reshape((1080, 1920, 3))
+        
+        ############### YOUR CODE HERE ###############
+        
+        
+        ############### YOUR CODE HERE ###############
+        
         self.drug_detection_outputs.put('drug')
+        
         self.done_barrier.wait()
-        time.sleep(0.01)
-    
+        self.inference_event.clear()
