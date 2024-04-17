@@ -10,27 +10,7 @@ from jinja2 import Template
 
 from utils.video.remove_nblock import remove_nonblock
 
-def send_audio_to_rtsp(ffmpeg_command, shared_audio_data:shared_memory.SharedMemory, exit_flag):
 
-    while not exit_flag.value:
-        try:
-            res = copy.deepcopy(shared_audio_data.buf.tobytes())
-            a = time.time()
-            ffmpeg_process.stdin.write(res[:176400])
-            time.sleep(time.time() - a)
-            ffmpeg_process.stdin.flush()
-            # time.sleep(2)
-        except IOError:
-            traceback.print_exc()
-            continue
-        except KeyboardInterrupt:
-            break
-        except SystemExit:
-            print("Worker received SIGTERM")
-            sys.exit()
-    ffmpeg_process.stdin.flush()
-    remove_nonblock(ffmpeg_process.stdin.fileno())
-    ffmpeg_process.terminate()
 
     
 def load_ffmpeg_command_from_yaml(yaml_file, rtsp_url, config_name):

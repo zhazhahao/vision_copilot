@@ -40,8 +40,6 @@ ffmpeg_audio_command:
 
 ffmpeg_video_command:
   - /usr/local/bin/ffmpeg
-  - -hwaccel 
-  - auto
   - -loglevel 
   - error
   - -vsync

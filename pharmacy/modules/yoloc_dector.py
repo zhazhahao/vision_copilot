@@ -1,8 +1,9 @@
 import traceback
 import numpy as np
-from qinglang.utils.utils import Config, load_json, load_txt
+from qinglang.utils.utils import Config, load_json
 
 from dependency.yolo.models.yolo.model import YOLO
+from utils.ocr_infer.load_data_list import load_txt
 from utils.ocr_infer.ocr_processor import procession
 from qinglang.data_structure.video.video_base import VideoFlow
 from utils.yolv_infer.curr_false import curr_false

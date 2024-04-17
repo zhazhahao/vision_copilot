@@ -3,6 +3,7 @@ import time
 import traceback
 
 from configs.video.audio_config import *
+from utils.video.remove_nblock import remove_nonblock
 from utils.video.generate_fake_audio import generate_audio
 
 
@@ -36,6 +37,7 @@ def send_realtime_audio_to_rtsp(ffmpeg_command,flag:mp.Value,exit_flag:mp.Value)
         traceback.print_exc()
     except KeyboardInterrupt:
         print("Exited KeyBoardInterruption")
+    remove_nonblock(ffmpeg_process.stdin.fileno())
     ffmpeg_process.kill()
     shared_audio_data.unlink()
 if __name__ == "__main__":

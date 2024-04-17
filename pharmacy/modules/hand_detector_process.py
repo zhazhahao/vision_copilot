@@ -13,8 +13,8 @@ class HandDetectorProcess(multiprocessing.Process):
         self.frame_shared_array = frame_shared_array
         self.hand_detection_outputs = hand_detection_outputs
         
-        self.config = Config('configs/hand_detection.yaml')
-        self.source = Config('configs/source.yaml')
+        self.config = Config('/home/portable-00/VisionCopilot/pharmacy/configs/hand_detection.yaml')
+        self.source = Config('/home/portable-00/VisionCopilot/pharmacy/configs/source.yaml')
         self.detector = Detector(model_path=self.source.onnx_path, device_name=self.config.device)
 
         super().__init__()

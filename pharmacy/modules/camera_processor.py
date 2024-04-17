@@ -76,7 +76,7 @@ class CameraProcessor:
                                 try:
                                     self.shm.buf[5:5+len(res_image)] = res_image  # 存入完整的 raw image 数据
                                 except:
-                                    print(res_image)
+                                    print(type(res_image))
                                 # print("Late Answer" +str(len(res_image)))
                                 # print(time.time() - a)
                             else:
@@ -84,7 +84,7 @@ class CameraProcessor:
                     try_num = 0
                 else:
                     
-                    print(try_num)
+                    # print(try_num)
                     try_num += 1
                 # 显示图像
             exit_flag.value = 0
