@@ -1,5 +1,5 @@
-import multiprocessing
 import numpy as np
+import torch.multiprocessing as multiprocessing
 from modules.cameras import VirtualCamera
 from modules.catch_checker import CatchChecker
 from modules.drug_detector_process import DrugDetectorProcess
@@ -9,11 +9,9 @@ from qinglang.utils.utils import ClassDict
 
 class MainProcess:
     def __init__(self) -> None:
-        self.stream = VirtualCamera("/mnt/nas/datasets/Pharmacy_for_label/20240313/20240313_160556/20240313_160556.mp4")
-
+        self.stream = VirtualCamera("/home/portable-00/VisionCopilot/pharmacy/20240313_160556/20240313_160556.mp4")
         self.init_shared_variables()
         self.init_subprocess()
-
         self.catch_checker = CatchChecker()
     
     def init_shared_variables(self):
@@ -39,6 +37,7 @@ class MainProcess:
             hand_detection_results, drug_detection_results = self.parallel_inference()
             
             print(hand_detection_results)
+            print(drug_detection_results)
 
             # self.catch_checker.observe(hand_detection_results, drug_detection_results)
             # check_results = self.catch_checker.check()
@@ -62,5 +61,7 @@ class MainProcess:
         return hand_detection_results, drug_detection_results
 
 if __name__ == '__main__':
+    multiprocessing.set_start_method('spawn')
+
     test1 = MainProcess()
     test1.run()
