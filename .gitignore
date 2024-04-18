@@ -1,9 +1,8 @@
 # Custom
 *.jpg
 *.mp4
-pharmacy/configs/source.yaml
 checkpoints
-
+**/source.yaml
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
