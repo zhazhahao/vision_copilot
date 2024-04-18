@@ -28,8 +28,7 @@ def merge_drug_lists(list1, list2):
         while i < len(list1) and j < len(list2):
             # 如果当前元素相等，添加到合并列表中
             if list1[i] == list2[j]:
-                if list1[i] not in merged_list:
-                    merged_list.append(list1[i])
+                merged_list.append(list1[i]) if list1[i] not in merged_list else None
                 i += 1
                 j += 1
             elif list2[j] in list1:
@@ -45,14 +44,8 @@ def merge_drug_lists(list1, list2):
             else:
                 reserve_list.append(list2[j])
                 j += 1
-        while i < len(list1):
-            if list1[i] not in merged_list:
-                merged_list.append(list1[i])
-            i += 1
-        while j < len(list2):
-            if list2[j] not in merged_list:
-                merged_list.append(list2[j])
-            j += 1
+        merged_list.extend(list1[i:])
+        merged_list.extend(list2[j:])
         result_list = []
         
         # print(merged_list)
@@ -74,7 +67,7 @@ class OCRProcess:
         max_candicated = 0
         res_counter = []
         result_counter = Counter()
-        for filename in os.listdir(r"/home/portable-00/VisionCopilot/pharmacy/images"):
+        for filename in sorted(os.listdir(r"/home/portable-00/VisionCopilot/pharmacy/images"),key=get_numeric_part):
             frame = cv2.imread(r"/home/portable-00/VisionCopilot/pharmacy/images/"+filename)
             (dt_box_res,prescription,trigger) = procession(frame,self.text_sys,self.data_lists,"prescription")
             end_trigger_times += 1 if trigger else 0
@@ -94,14 +87,13 @@ class OCRProcess:
             if (res_counter[0][i][0][1] - res_counter[0][i-1][0][1]) >= height * 1.5:
                 res = procession(res_frame[int(res_counter[0][i-1][3][1]):int(res_counter[0][i][2][1]),
                                            int(res_counter[0][i][3][0]):int(res_counter[0][i-1][2][0])]
-                                 ,self.text_sys,data_lists=self.candiancate,options="Single")
-                res_counter[1].insert(i+conter_len,res)
+                                 ,self.text_sys,data_lists=self.data_lists,options="Single")
+                res_counter[1].insert(i + conter_len,res)
                 conter_len += 1
         cv2.waitKey(0)
         
         print(res_counter[1])
         print(result_counter)
         print(self.candiancate)
-        print(res_counter)
 test = OCRProcess()
 test.scan_prescription()

@@ -1,25 +1,22 @@
-import multiprocessing
-import signal
-import os
-import time
+import cv2
+import numpy as np
 
-class Parent1:
-    def __iter__(self):
-        print("Iterating from Parent1")
-        return iter([1, 2, 3])
+img = cv2.imread('/home/portable-00/VisionCopilot/pharmacy/t.png')
+gray = cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
+edges = cv2.Canny(gray,50,150,apertureSize = 3)
 
-class Parent2:
-    def __iter__(self):
-        print("Iterating from Parent2")
-        return iter([4, 5, 6])
+lines = cv2.HoughLines(edges,1,np.pi/180,200)
+for line in lines:
+    for rho,theta in line:
+        a = np.cos(theta)
+        b = np.sin(theta)
+        x0 = a*rho
+        y0 = b*rho
+        x1 = int(x0 + 1000*(-b))
+        y1 = int(y0 + 1000*(a))
+        x2 = int(x0 - 1000*(-b))
+        y2 = int(y0 - 1000*(a))
 
-class Child(Parent1, Parent2):
-    def __iter__(self):
-        print("Iterating from Child")
-        # Calling Parent1's __iter__() explicitly
-        return Parent1.__iter__(self)
+        cv2.line(img,(x1,y1),(x2,y2),(0,0,255),2)
 
-if __name__ == "__main__":
-    child = Child()
-    for item in child:
-        print(item)
+cv2.imwrite('houghlines3.jpg',img)
