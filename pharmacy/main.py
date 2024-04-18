@@ -16,7 +16,6 @@ class MainProcess:
         self.init_shared_variables()
         self.init_subprocess()
         self.catch_checker = CatchChecker()
-
     
     def init_shared_variables(self):
         self.frame_shared_array = multiprocessing.Array('B', 1920 * 1080 * 3)
@@ -66,7 +65,7 @@ class MainProcess:
         
         return hand_detection_results, drug_detection_results
 
-            
+
 if __name__ == '__main__':
     multiprocessing.set_start_method('spawn')
 
