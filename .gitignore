@@ -3,6 +3,7 @@
 *.mp4
 checkpoints
 *.yaml
+pharmacy/configs/source.yaml
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
@@ -156,3 +157,4 @@ det_models*
 rec_models*
 *副本*
 *测试数据*
+

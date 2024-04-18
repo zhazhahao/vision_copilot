@@ -33,6 +33,7 @@ def merge_drug_lists(list1, list2):
                 j += 1
             elif list2[j] in list1:
                 if list1.index(list2[j]) > i:
+                    merged_list.extend()
                     for resve in reserve_list:
                         merged_list.append(resve)
                     reserve_list = []
