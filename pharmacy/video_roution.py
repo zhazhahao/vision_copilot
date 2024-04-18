@@ -15,7 +15,7 @@ if __name__ == "__main__":
             dim = (width, height)
             resized_image = cv2.resize(mat, dim, interpolation=cv2.INTER_AREA)
             if bools:
-                cv2.imwrite("/home/portable-00/VisionCopilot/pharmacy/images/"+str(i)+".jpg",mat)
+                # cv2.imwrite("/home/portable-00/VisionCopilot/pharmacy/images/"+str(i)+".jpg",mat)
                 cv2.imshow("win_name",resized_image)
                 i = i+1
             if cv2.waitKey(1) & 0xFF == ord('q'):

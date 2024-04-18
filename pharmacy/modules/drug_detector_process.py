@@ -1,7 +1,8 @@
-import multiprocessing
 import numpy as np
+import torch.multiprocessing as multiprocessing
 from modules.yoloc_dector import YolovDector
-from qinglang.dataset.utils.utils import plot_xywh,centerwh2xywh
+from qinglang.dataset.utils.utils import centerwh2xywh
+
 
 class DrugDetectorProcess(multiprocessing.Process):
     def __init__(self, inference_event: multiprocessing.Event, done_barrier: multiprocessing.Barrier, frame_shared_array: multiprocessing.Array, drug_detection_outputs: multiprocessing.Queue) -> None:
@@ -34,15 +35,18 @@ class DrugDetectorProcess(multiprocessing.Process):
         for i in range(len(ocr_detect_results)):
             if ocr_detect_results[i] is not None:
                 ocr_list.append(ocr_detect_results[i].get("药品名称"))
-                print(ocr_list)
+           
+        yolo_results_list = [] 
+        
         if yolo_detect_results is not None:
-            clss = yolo_detect_results[0]
-            bboxs = yolo_detect_results[1]
-            for i in range(len(clss)):        
-                self.drug_detection_outputs.put({'bbox': centerwh2xywh((bboxs[i])[:4]), 'category_id': clss[i]})
             
-        #    self.drug_detection_outputs = detectresults 
+            clss = yolo_detect_results[0]
+            bboxes = yolo_detect_results[1]
+            
+            yolo_results_list = [{'bbox': centerwh2xywh(bboxes[i]), 'category_id': int(clss[i])}  for i in range(len(bboxes))]
+                
+        self.drug_detection_outputs.put(yolo_results_list)
         ############### YOUR CODE HERE ###############
-        self.drug_detection_outputs.put('drug') # change to your detection result in format [{'bbox': centerwh2xywh(bbox[:4]), 'category_id': 0} for bbox in bboxes]
+
         self.done_barrier.wait()
         self.inference_event.clear()

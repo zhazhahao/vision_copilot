@@ -461,6 +461,7 @@ def main(args):
         img_list.append(img)
     try:
         rec_res, predict_time = text_recognizer(img_list)
+        print(rec_res)
     except Exception as e:
         print(e)
         exit()

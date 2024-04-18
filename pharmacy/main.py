@@ -4,15 +4,19 @@ from modules.cameras import VirtualCamera
 from modules.catch_checker import CatchChecker
 from modules.drug_detector_process import DrugDetectorProcess
 from modules.hand_detector_process import HandDetectorProcess
-from qinglang.utils.utils import ClassDict
+from modules.detect_results_stdout import stdrefresh
+from qinglang.utils.utils import ClassDict, Config
 
 
 class MainProcess:
     def __init__(self) -> None:
-        self.stream = VirtualCamera("/home/portable-00/VisionCopilot/pharmacy/20240313_160556/20240313_160556.mp4")
+        self.source = Config("configs/source.yaml")
+
+        self.stream = VirtualCamera(self.source.virtual_camera_source)
         self.init_shared_variables()
         self.init_subprocess()
         self.catch_checker = CatchChecker()
+
     
     def init_shared_variables(self):
         self.frame_shared_array = multiprocessing.Array('B', 1920 * 1080 * 3)
@@ -39,8 +43,10 @@ class MainProcess:
             print(hand_detection_results)
             print(drug_detection_results)
 
-            # self.catch_checker.observe(hand_detection_results, drug_detection_results)
-            # check_results = self.catch_checker.check()
+            self.catch_checker.observe(hand_detection_results, drug_detection_results)
+            check_results = self.catch_checker.check()
+
+            print(check_results)
 
     def share_frame(self, frame: np.ndarray) -> None:
         np.copyto(np.frombuffer(self.frame_shared_array.get_obj(), dtype=np.uint8), frame.flatten())
@@ -60,6 +66,7 @@ class MainProcess:
         
         return hand_detection_results, drug_detection_results
 
+            
 if __name__ == '__main__':
     multiprocessing.set_start_method('spawn')
 
