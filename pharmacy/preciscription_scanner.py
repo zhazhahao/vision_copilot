@@ -33,9 +33,7 @@ def merge_drug_lists(list1, list2):
                 j += 1
             elif list2[j] in list1:
                 if list1.index(list2[j]) > i:
-                    merged_list.extend()
-                    for resve in reserve_list:
-                        merged_list.append(resve)
+                    merged_list.extend(reserve_list)
                     reserve_list = []
                     merged_list.append(list1[i])
                     i += 1
@@ -48,12 +46,8 @@ def merge_drug_lists(list1, list2):
         merged_list.extend(list1[i:])
         merged_list.extend(list2[j:])
         result_list = []
-        
-        # print(merged_list)
         for item in reversed(merged_list):
-            # Add if first come
-            if item not in result_list:
-                result_list.insert(0, item)
+            result_list.insert(0, item) if item not in result_list else None
         return result_list
 class OCRProcess:
     def __init__(self) -> None:
@@ -76,6 +70,7 @@ class OCRProcess:
                 max_candicated = prescription.__len__()
                 res_counter = [dt_box_res,prescription]
                 res_frame = frame
+            print(prescription)
             for result in prescription:
                 result_counter[result] += 1
             self.candiancate = merge_drug_lists(self.candiancate,prescription) # Waiting For implemention
