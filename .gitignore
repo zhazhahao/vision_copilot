@@ -2,7 +2,8 @@
 *.jpg
 *.mp4
 checkpoints
-**/source.yaml
+*.yaml
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
