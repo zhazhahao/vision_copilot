@@ -19,7 +19,7 @@ class YolovDector:
 
         self.model = YOLO(self.source.yolov_path)
         self.video_flow = VideoFlow(self.source.virtual_camera_source)
-        self.text_sys = TextSystem(utility.parse_args())
+        # self.text_sys = TextSystem(utility.parse_args())
         self.data = load_json(self.source.medicine_database)
         self.data_lists = load_txt(self.source.medicine_names)
         self.reserve_bbox = []
@@ -38,46 +38,6 @@ class YolovDector:
                     pass
                 else:
                     return [tensor_converter(cls), tensor_converter(xywh)]       
-    
-    def detect_medicines(self, frame):
-        try:
-            # ocr
-            matching_medicines = None
-            ocr_dt_boxes, ocr_rec_res = procession(frame, self.text_sys, self.data_lists, "process")
-            for i in range(len(ocr_dt_boxes)):
-                matching_medicines  = find_medicine_by_name(self.data,
-                                                           curr_false(ocr_rec_res[i][0], self.data_lists[:-2]))
-
-                if matching_medicines:
-                    matching_medicines = matching_medicines
-                    pos = i
-                    ocr_current_shelf = matching_medicines.get("货架号")  # or other info in the dataset
-                    break
-                else:
-                    ocr_current_shelf = ''
-            # yolo
-            results = self.model(frame, verbose=True)
-            for result in results:
-                boxes = result.boxes
-                # probs = result.probs
-                cls, conf, xywh = boxes.cls, boxes.conf, boxes.xywh  # get info needed
-                # print([tensor_converter(cls), tensor_converter(xywh)])
-                if cls.__len__() == 0:
-                    if matching_medicines is not None:
-                        return [[matching_medicines['index'] - 1],self.convert_bbox_to_yolov(ocr_dt_boxes[pos],frame.shape[0],frame.shape[1])]
-                    pass
-                else:
-                    current_drug = get_drug_by_index(int(cls[0]), self.data)
-                    if ocr_current_shelf is not None:
-                        if current_drug.get("货架号") != ocr_current_shelf:
-                            detect_res_cls = "nomatch"
-                            return [detect_res_cls, []]
-                        else:
-                            return [tensor_converter(cls), tensor_converter(xywh)]
-                    else:
-                        return [tensor_converter(cls), tensor_converter(xywh)]
-        except Exception as e:
-            traceback.print_exc()
 
     def drug_match(self, medicine_cls, prescription):
         med_name = get_drug_by_index(medicine_cls, self.data)

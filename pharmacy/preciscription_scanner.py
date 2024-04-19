@@ -117,7 +117,7 @@ class OCRProcess:
                         rec_res = procession(res_frame[selected_height + int(height * 0.5):selected_height + int(height * 1.5),
                                                    selected_width:selected_width + int(width * 1.5)]
                                          ,self.text_sys,data_lists=self.data_lists,options="Single")
-                        cv2.imwrite("1.png",res_frame[selected_height + int(height * 0.5):selected_height + int(height * 1.5),
+                        cv2.imwrite("refe/"+str(tickles)+"_"+str(conter_len)+".jpg",res_frame[selected_height:selected_height + int(height * 1.5),
                                                    selected_width:selected_width + int(width * 1.5)]
                                          )
                         fix_height += height
@@ -127,7 +127,7 @@ class OCRProcess:
                         conter_len += 1
                         res_counter[1].insert(i - 1 + conter_len,rec_res)
             cv2.imwrite(str(tickles)+".jpg",res_frame)
-            print(res_counter[1], tickles)
+            # print(res_counter[1], tickles)
             # self._merge_drug_lists(self.candiancate,res_counter[1])
         print(res_counter[1])
         print(result_counter)

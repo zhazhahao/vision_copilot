@@ -12,14 +12,11 @@ def init_args():
     parser = argparse.ArgumentParser()
     # params for prediction engine
     parser.add_argument("--use_gpu", type=str2bool, default=True)
-    # parser.add_argument("--ir_optim", type=str2bool, default=True)
-    # parser.add_argument("--use_tensorrt", type=str2bool, default=False)
-    # parser.add_argument("--use_fp16", type=str2bool, default=False)
     parser.add_argument("--gpu_mem", type=int, default=500)
-    parser.add_argument("--warmup", type=str2bool, default=False)
+    parser.add_argument("--warmup", type=str2bool, default=True)
 
     # params for text detector
-    parser.add_argument("--image_dir", type=str,default="")
+    parser.add_argument("--image_dir", type=str,default=None)
     parser.add_argument("--det_algorithm", type=str, default='DB')
     parser.add_argument("--det_model_path", type=str, default="/home/portable-00/VisionCopilot/pharmacy/checkpoints/ocr/ch_ptocr_v4_det_server_infer.pth")
     parser.add_argument("--det_limit_side_len", type=float, default=960)
@@ -32,30 +29,6 @@ def init_args():
     parser.add_argument("--max_batch_size", type=int, default=10)
     parser.add_argument("--use_dilation", type=str2bool, default=False)
     parser.add_argument("--det_db_score_mode", type=str, default="fast")
-
-    # EAST parmas
-    parser.add_argument("--det_east_score_thresh", type=float, default=0.8)
-    parser.add_argument("--det_east_cover_thresh", type=float, default=0.1)
-    parser.add_argument("--det_east_nms_thresh", type=float, default=0.2)
-
-    # SAST parmas
-    parser.add_argument("--det_sast_score_thresh", type=float, default=0.5)
-    parser.add_argument("--det_sast_nms_thresh", type=float, default=0.2)
-    parser.add_argument("--det_sast_polygon", type=str2bool, default=False)
-
-    # PSE parmas
-    parser.add_argument("--det_pse_thresh", type=float, default=0)
-    parser.add_argument("--det_pse_box_thresh", type=float, default=0.85)
-    parser.add_argument("--det_pse_min_area", type=float, default=16)
-    parser.add_argument("--det_pse_box_type", type=str, default='box')
-    parser.add_argument("--det_pse_scale", type=int, default=1)
-
-    # FCE parmas
-    parser.add_argument("--scales", type=list, default=[8, 16, 32])
-    parser.add_argument("--alpha", type=float, default=1.0)
-    parser.add_argument("--beta", type=float, default=1.0)
-    parser.add_argument("--fourier_degree", type=int, default=5)
-    parser.add_argument("--det_fce_box_type", type=str, default='poly')
 
     # params for text recognizer
     parser.add_argument("--rec_algorithm", type=str, default='CRNN')
@@ -72,62 +45,22 @@ def init_args():
     parser.add_argument("--limited_min_width", type=int, default=16)
 
     parser.add_argument(
-        "--vis_font_", type=str,
-        default=os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), 'doc/fonts/simfang.ttf'))
-    parser.add_argument(
         "--rec_char_dict_path",
         type=str,
         default=os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
                              '/home/portable-00/VisionCopilot/pharmacy/dependency/ocr/toolkit/ppocr_keys_v1.txt'))
 
     # params for text classifier
-    parser.add_argument("--use_angle_cls", type=str2bool, default=False)
+    parser.add_argument("--use_angle_cls", type=str2bool, default=True)
     parser.add_argument("--cls_model_path", type=str,default="/home/portable-00/VisionCopilot/pharmacy/checkpoints/ocr/ch_ptocr_mobile_v2.0_cls_infer.pth")
     parser.add_argument("--cls_image_shape", type=str, default="3, 48, 192")
     parser.add_argument("--label_list", type=list, default=['0', '180'])
-    parser.add_argument("--cls_batch_num", type=int, default=6)
     parser.add_argument("--cls_thresh", type=float, default=0.9)
-
-    parser.add_argument("--enable_mkldnn", type=str2bool, default=False)
-    parser.add_argument("--use_pdserving", type=str2bool, default=False)
-
-    # params for e2e
-    parser.add_argument("--e2e_algorithm", type=str, default='PGNet')
-    parser.add_argument("--e2e_model_path", type=str)
-    parser.add_argument("--e2e_limit_side_len", type=float, default=768)
-    parser.add_argument("--e2e_limit_type", type=str, default='max')
-
-    # PGNet parmas
-    parser.add_argument("--e2e_pgnet_score_thresh", type=float, default=0.5)
-    parser.add_argument(
-        "--e2e_char_dict_path", type=str,
-        default=os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
-                             '/home/portable-00/VisionCopilot/pharmacy/dependency/ocr/utils/ic15_dict.txt'))
-    parser.add_argument("--e2e_pgnet_valid_set", type=str, default='totaltext')
-    parser.add_argument("--e2e_pgnet_polygon", type=bool, default=True)
-    parser.add_argument("--e2e_pgnet_mode", type=str, default='fast')
-
-    # SR parmas
-    parser.add_argument("--sr_model_path", type=str)
-    parser.add_argument("--sr_image_shape", type=str, default="3, 32, 128")
-    parser.add_argument("--sr_batch_num", type=int, default=1)
 
     # params .yaml
     parser.add_argument("--det_yaml_path", type=str, default="/home/portable-00/VisionCopilot/pharmacy/configs/ocr/ch_PP-OCRv4_det_teacher.yml")
     parser.add_argument("--rec_yaml_path", type=str, default="/home/portable-00/VisionCopilot/pharmacy/configs/ocr/ch_PP-OCRv4_rec_hgnet.yml")
     parser.add_argument("--cls_yaml_path", type=str, default=None)
-    parser.add_argument("--e2e_yaml_path", type=str, default=None)
-    parser.add_argument("--sr_yaml_path", type=str, default=None)
-
-    # multi-process
-    parser.add_argument("--use_mp", type=str2bool, default=False)
-    parser.add_argument("--total_process_num", type=int, default=1)
-    parser.add_argument("--process_id", type=int, default=0)
-
-    parser.add_argument("--benchmark", type=str2bool, default=False)
-    parser.add_argument("--save_log_path", type=str, default="./log_output/")
-
-    parser.add_argument("--show_log", type=str2bool, default=True)
 
     return parser
 
@@ -174,61 +107,13 @@ def AnalysisConfig(weights_path, yaml_path=None, char_num=None):
     # assert weights_name in supported_weights, \
     #     "supported weights are {} but input weights is {}".format(supported_weights, weights_name)
 
-    if weights_name == 'ch_ptocr_server_v2.0_det_infer.pth':
-        network_config = {'model_type':'det',
-                          'algorithm':'DB',
-                          'Transform':None,
-                          'Backbone':{'name':'ResNet_vd', 'layers':18, 'disable_se':True},
-                          'Neck':{'name':'DBFPN', 'out_channels':256},
-                          'Head':{'name':'DBHead', 'k':50}}
-
-    elif weights_name == 'ch_ptocr_server_v2.0_rec_infer.pth':
-        network_config = {'model_type':'rec',
-                          'algorithm':'CRNN',
-                          'Transform':None,
-                          'Backbone':{'name':'ResNet', 'layers':34},
-                          'Neck':{'name':'SequenceEncoder', 'hidden_size':256, 'encoder_type':'rnn'},
-                          'Head':{'name':'CTCHead', 'fc_decay': 4e-05}}
-
-    elif weights_name in ['ch_ptocr_mobile_v2.0_det_infer.pth']:
-        network_config = {'model_type': 'det',
-                          'algorithm': 'DB',
-                          'Transform': None,
-                          'Backbone': {'name': 'MobileNetV3', 'model_name': 'large', 'scale': 0.5, 'disable_se': True},
-                          'Neck': {'name': 'DBFPN', 'out_channels': 96},
-                          'Head': {'name': 'DBHead', 'k': 50}}
-
-    elif weights_name =='ch_ptocr_mobile_v2.0_rec_infer.pth':
-        network_config = {'model_type':'rec',
-                          'algorithm':'CRNN',
-                          'Transform':None,
-                          'Backbone':{'model_name':'small', 'name':'MobileNetV3', 'scale':0.5, 'small_stride':[1,2,2,2]},
-                          'Neck':{'name':'SequenceEncoder', 'hidden_size':48, 'encoder_type':'rnn'},
-                          'Head':{'name':'CTCHead', 'fc_decay': 4e-05}}
-
-    elif weights_name == 'ch_ptocr_mobile_v2.0_cls_infer.pth':
+    if weights_name == 'ch_ptocr_mobile_v2.0_cls_infer.pth':
         network_config = {'model_type':'cls',
                           'algorithm':'CLS',
                           'Transform':None,
                           'Backbone':{'name':'MobileNetV3', 'model_name':'small', 'scale':0.35},
                           'Neck':None,
                           'Head':{'name':'ClsHead', 'class_dim':2}}
-
-    elif weights_name == 'ch_ptocr_v2_rec_infer.pth':
-        network_config = {'model_type': 'rec',
-                          'algorithm': 'CRNN',
-                          'Transform': None,
-                          'Backbone': {'name': 'MobileNetV1Enhance', 'scale': 0.5},
-                          'Neck': {'name': 'SequenceEncoder', 'hidden_size': 64, 'encoder_type': 'rnn'},
-                          'Head': {'name': 'CTCHead', 'mid_channels': 96, 'fc_decay': 2e-05}}
-
-    elif weights_name == 'ch_ptocr_v2_det_infer.pth':
-        network_config = {'model_type': 'det',
-                          'algorithm': 'DB',
-                          'Transform': None,
-                          'Backbone': {'name': 'MobileNetV3', 'model_name': 'large', 'scale': 0.5, 'disable_se': True},
-                          'Neck': {'name': 'DBFPN', 'out_channels': 96},
-                          'Head': {'name': 'DBHead', 'k': 50}}
 
     elif weights_name == 'ch_ptocr_v3_rec_infer.pth':
         network_config = {'model_type':'rec',
@@ -255,77 +140,6 @@ def AnalysisConfig(weights_path, yaml_path=None, char_num=None):
                           'Neck': {'name': 'RSEFPN', 'out_channels': 96, 'shortcut': True},
                           'Head': {'name': 'DBHead', 'k': 50}}
 
-    elif weights_name == 'det_mv3_db_v2.0_infer.pth':
-        network_config = {'model_type': 'det',
-                          'algorithm': 'DB',
-                          'Transform': None,
-                          'Backbone': {'name': 'MobileNetV3', 'model_name': 'large'},
-                          'Neck': {'name': 'DBFPN', 'out_channels': 256},
-                          'Head': {'name': 'DBHead', 'k': 50}}
-
-    elif weights_name == 'det_r50_vd_db_v2.0_infer.pth':
-        network_config = {'model_type': 'det',
-                          'algorithm': 'DB',
-                          'Transform': None,
-                          'Backbone': {'name': 'ResNet_vd', 'layers': 50},
-                          'Neck': {'name': 'DBFPN', 'out_channels': 256},
-                          'Head': {'name': 'DBHead', 'k': 50}}
-
-    elif weights_name == 'det_mv3_east_v2.0_infer.pth':
-        network_config = {'model_type': 'det',
-                          'algorithm': 'EAST',
-                          'Transform': None,
-                          'Backbone': {'name': 'MobileNetV3', 'model_name': 'large'},
-                          'Neck': {'name': 'EASTFPN', 'model_name': 'small'},
-                          'Head': {'name': 'EASTHead', 'model_name': 'small'}}
-
-    elif weights_name == 'det_r50_vd_east_v2.0_infer.pth':
-        network_config = {'model_type': 'det',
-                          'algorithm': 'EAST',
-                          'Transform': None,
-                          'Backbone': {'name': 'ResNet_vd', 'layers': 50},
-                          'Neck': {'name': 'EASTFPN', 'model_name': 'large'},
-                          'Head': {'name': 'EASTHead', 'model_name': 'large'}}
-
-    elif weights_name == 'det_r50_vd_sast_icdar15_v2.0_infer.pth':
-        network_config = {'model_type': 'det',
-                          'algorithm': 'SAST',
-                          'Transform': None,
-                          'Backbone': {'name': 'ResNet_SAST', 'layers': 50},
-                          'Neck': {'name': 'SASTFPN', 'with_cab': True},
-                          'Head': {'name': 'SASTHead'}}
-
-    elif weights_name == 'det_r50_vd_sast_totaltext_v2.0_infer.pth':
-        network_config = {'model_type': 'det',
-                          'algorithm': 'SAST',
-                          'Transform': None,
-                          'Backbone': {'name': 'ResNet_SAST', 'layers': 50},
-                          'Neck': {'name': 'SASTFPN', 'with_cab': True},
-                          'Head': {'name': 'SASTHead'}}
-
-    elif weights_name == 'en_server_pgneta_infer.pth':
-        network_config = {'model_type': 'e2e',
-                          'algorithm': 'PGNet',
-                          'Transform': None,
-                          'Backbone': {'name': 'ResNet', 'layers': 50},
-                          'Neck': {'name': 'PGFPN'},
-                          'Head': {'name': 'PGHead'}}
-
-    elif weights_name == 'en_ptocr_mobile_v2.0_table_det_infer.pth':
-        network_config = {'model_type': 'det','algorithm': 'DB',
-                          'Transform': None,
-                          'Backbone': {'name': 'MobileNetV3', 'model_name': 'large', 'scale': 0.5, 'disable_se': False},
-                          'Neck': {'name': 'DBFPN', 'out_channels': 96},
-                          'Head': {'name': 'DBHead', 'k': 50}}
-
-    elif weights_name == 'en_ptocr_mobile_v2.0_table_rec_infer.pth':
-        network_config = {'model_type': 'rec',
-                          'algorithm': 'CRNN',
-                          'Transform': None,
-                          'Backbone': {'model_name': 'large', 'name': 'MobileNetV3', },
-                          'Neck': {'name': 'SequenceEncoder', 'hidden_size': 96, 'encoder_type': 'rnn'},
-                          'Head': {'name': 'CTCHead', 'fc_decay': 4e-05}}
-
     elif 'om_' in weights_name and '_rec_' in weights_name:
         network_config = {'model_type': 'rec',
                           'algorithm': 'CRNN',
@@ -346,23 +160,6 @@ def AnalysisConfig(weights_path, yaml_path=None, char_num=None):
         # raise NotImplementedError
 
     return network_config
-
-
-def draw_e2e_res(dt_boxes, strs, img_path):
-    src_im = cv2.imread(img_path)
-    for box, str in zip(dt_boxes, strs):
-        box = box.astype(np.int32).reshape((-1, 1, 2))
-        cv2.polylines(src_im, [box], True, color=(255, 255, 0), thickness=2)
-        cv2.putText(
-            src_im,
-            str,
-            org=(int(box[0, 0, 0]), int(box[0, 0, 1])),
-            fontFace=cv2.FONT_HERSHEY_COMPLEX,
-            fontScale=0.7,
-            color=(0, 255, 0),
-            thickness=1)
-    return src_im
-
 
 def draw_text_det_res(dt_boxes, img_path):
     src_im = cv2.imread(img_path)
