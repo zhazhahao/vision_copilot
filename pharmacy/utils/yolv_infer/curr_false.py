@@ -5,7 +5,6 @@ import Levenshtein
 
 
 def curr_false(text,data_lists,max_threshold = 0.4):
-
     search_ch_text = re.compile(r'[\u4e00-\u9fff]')
     if search_ch_text.search(text):
         if text in data_lists:

@@ -16,8 +16,8 @@ class HandDetectorProcess(multiprocessing.Process):
         super().__init__()
     
     def init_process(self):
-        self.config = Config('/home/portable-00/VisionCopilot/pharmacy/configs/hand_detection.yaml')
-        self.source = Config('/home/portable-00/VisionCopilot/pharmacy/configs/source.yaml')
+        self.config = Config('configs/hand_detection.yaml')
+        self.source = Config('configs/source.yaml')
         self.detector = Detector(model_path=self.source.onnx_path, device_name=self.config.device)
 
     def run(self) -> None:

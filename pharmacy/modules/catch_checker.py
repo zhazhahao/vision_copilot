@@ -1,22 +1,24 @@
 import numpy as np
-from typing import List
+from copy import deepcopy
+from typing import List, Dict
 from modules.object_tracker import ObjectTracker
 from qinglang.dataset.utils.utils import xywh2xyxy, check_bboxes_intersection
-from qinglang.utils.utils import Config
 from qinglang.utils.mathematic import euclidean_distance
+from qinglang.utils.utils import Config
 
 
 class CatchChecker:
     def __init__(self) -> None:
-        self.config = Config('/home/portable-00/VisionCopilot/pharmacy/configs/catch_check.yaml')
-        self.hand_tracker = ObjectTracker(120, 5, 200)
-        self.medicine_tracker = ObjectTracker(120, 5, 200)
+        self.config = Config('configs/catch_check.yaml')
 
-    def observe(self, hands: List, medicines: List) -> None:
-        self.hand_tracker.update(hands)
-        self.medicine_tracker.update(medicines)
+        self.hand_tracker = ObjectTracker()
+        self.medicine_tracker = ObjectTracker()
+
+    def observe(self, hands: List[Dict], medicines: List[Dict]) -> None:
+        self.hand_tracker.update(deepcopy(hands))
+        self.medicine_tracker.update(deepcopy(medicines))
     
-    def check(self) -> bool:
+    def check(self) -> List:
         medicines_catched = []
         for hand in self.hand_tracker.tracked_objects:
             hand_bboxes = [node and xywh2xyxy(node['bbox']) for node in hand.trajectory]

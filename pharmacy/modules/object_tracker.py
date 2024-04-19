@@ -1,5 +1,5 @@
 import numpy as np
-from typing import Union, List
+from typing import Union, List, Dict
 from itertools import takewhile
 from qinglang.data_structure.base import RollingArray
 from qinglang.dataset.utils.utils import xywh2center
@@ -29,16 +29,12 @@ class TrackedObject:
 
 
 class ObjectTracker:
-    def __init__(self, tracking_depth: int, decay_time: int, translation_threshold: int) -> None:
-        self.config = Config(
-            tracking_depth = tracking_depth,
-            decay_time = decay_time,
-            translation_threshold = translation_threshold
-        )
+    def __init__(self) -> None:
+        self.config = Config("configs/object_track.yaml")
         
         self.tracked_objects: List[TrackedObject] = []
         
-    def update(self, detection_results: List) -> None:
+    def update(self, detection_results: List[Dict]) -> None:
         self.tracked_objects = [tracked_object for tracked_object in self.tracked_objects if tracked_object.lost_tracking_counts() <= self.config.decay_time]
 
         for tracked_object in self.tracked_objects:
@@ -46,20 +42,13 @@ class ObjectTracker:
             
             candidates = [detection_result for detection_result in detection_results if detection_result['category_id'] == tracked_object.category_id]
             candidates_distance = [euclidean_distance(xywh2center(target_bbox), xywh2center(candidate['bbox'])) for candidate in candidates]
-            
-            # if candidates_distance == [] or candidates_distance[nearest_idx := np.argmin(candidates_distance)] >= self.config.translation_threshold * (tracked_object.lost_tracking_counts() + 1):
-            #     bbox = None
-            # else:
-            #     bbox = candidates[nearest_idx]['bbox']
-            #     detection_results.remove(candidates[nearest_idx])
 
-            if candidates_distance == [] or candidates_distance[np.argmin(candidates_distance)] >= self.config.translation_threshold * (tracked_object.lost_tracking_counts() + 1):
+            if candidates_distance == [] or (lambda nearest_idx: candidates_distance[nearest_idx])(nearest_idx := np.argmin(candidates_distance)) >= self.config.pixel_shift_threshold * (tracked_object.lost_tracking_counts() + 1):
                 bbox = None
             else:
-                nearest_idx = np.argmin(candidates_distance)
                 bbox = candidates[nearest_idx]['bbox']
                 del detection_results[nearest_idx]
-                
+
             tracked_object.add_frame_data(bbox)
             
         for detection_result in detection_results:
