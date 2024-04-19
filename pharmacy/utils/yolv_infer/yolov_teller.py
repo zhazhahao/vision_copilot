@@ -23,7 +23,7 @@ def get_drug_name_by_index(drug_list_path: str = '/home/portable-00/VisionCopilo
         # 读取药品列表文件
         with open(drug_list_path, 'r', encoding='utf-8') as file:
             lines = file.readlines()
-            # 通过索引获取药品名称，减1是因为索引是从0开始的
+            # 通过索引获取药品名称
             drug_name = lines[index].strip()
             return drug_name
     except (IOError, IndexError):

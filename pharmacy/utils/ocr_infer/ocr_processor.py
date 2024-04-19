@@ -26,8 +26,7 @@ def procession(img, text_sys, data_lists, options="process"):
                 return dt_boxes, rec_res
         else:
             rec_res, predict_time = text_sys.text_recognizer([img])
-            print(rec_res)
-            rec_res=curr_false(rec_res[0][0], data_lists, 0.5)
+            rec_res=curr_false(rec_res[0][0], data_lists, 0.4)
             return rec_res
 
     

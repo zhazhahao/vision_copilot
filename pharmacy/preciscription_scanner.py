@@ -110,18 +110,21 @@ class OCRProcess:
                         if selected_height + int(height) > res_frame.shape[0]:
                             selected_height = res_frame.shape[0]
                         # print(selected_height + int(height),selected_width + int(width))
-                        rec_res = procession(res_frame[selected_height - int(height * self.enlarge_bbox_ratio):selected_height + int(height),
-                                                   selected_width - int(width * self.enlarge_bbox_ratio):selected_width + int(width)]
+                        rec_res = procession(res_frame[selected_height:selected_height + int(height * 1.5),
+                                                   selected_width - int(width * self.enlarge_bbox_ratio):selected_width + int(width * 1.5)]
                                          ,self.text_sys,data_lists=self.data_lists,options="Single")
+                        # cv2.imwrite("check_foloder/"+str(tickles)+str(conter_len)+".png",res_frame[selected_height:selected_height + int(height),
+                        #                            selected_width:selected_width + int(width)])
+                        print(i)
+                        print(res_counter[1][i])
                         fix_height += height
-                        cv2.imwrite("check_foloder/"+str(tickles)+str(conter_len)+".png",res_frame[selected_height:selected_height + int(height),
-                                                   selected_width:selected_width + int(width)])
                         if rec_res == None:
                             fix_height += height
                             continue
-                        res_counter[1].insert(i + conter_len,rec_res)
+                        
                         conter_len += 1
-            cv2.imwrite(str(tickles)+".png",res_frame)
+                        res_counter[1].insert(i - 1 + conter_len,rec_res)
+            # cv2.imwrite(str(tickles)+".png",res_frame)
             print(res_counter[1], tickles)
         
         print(res_counter[1])
