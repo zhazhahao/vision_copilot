@@ -117,6 +117,9 @@ class OCRProcess:
                         rec_res = procession(res_frame[selected_height + int(height * 0.5):selected_height + int(height * 1.5),
                                                    selected_width:selected_width + int(width * 1.5)]
                                          ,self.text_sys,data_lists=self.data_lists,options="Single")
+                        cv2.imwrite("1.png",res_frame[selected_height + int(height * 0.5):selected_height + int(height * 1.5),
+                                                   selected_width:selected_width + int(width * 1.5)]
+                                         )
                         fix_height += height
                         if rec_res == None:
                             fix_height += height
