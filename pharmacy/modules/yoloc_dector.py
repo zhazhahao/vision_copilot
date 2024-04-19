@@ -15,14 +15,13 @@ import utils.ocr_infer.pytorchocr_utility as utility
 
 class YolovDector:
     def __init__(self) -> None:
-        self.config = Config(
-            yolov_path=rf"/home/portable-00/VisionCopilot/pharmacy/checkpoints/yolo/last.pt",
-        )
-        self.model = YOLO(self.config.yolov_path)
-        self.video_flow = VideoFlow("/home/portable-00/VisionCopilot/test/test_1.mp4")
+        self.source = Config("configs/source.yaml")
+
+        self.model = YOLO(self.source.yolov_path)
+        self.video_flow = VideoFlow(self.source.virtual_camera_source)
         self.text_sys = TextSystem(utility.parse_args())
-        self.data = load_json("/home/portable-00/VisionCopilot/pharmacy/database/medicine_database.json")
-        self.data_lists = load_txt("/home/portable-00/VisionCopilot/pharmacy/database/medicine_names.txt")
+        self.data = load_json(self.source.medicine_database)
+        self.data_lists = load_txt(self.source.medicine_names)
         self.reserve_bbox = []
         # self.back_current_shelf = ''
 
