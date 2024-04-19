@@ -113,8 +113,8 @@ class OCRProcess:
                         rec_res = procession(res_frame[selected_height:selected_height + int(height * 1.5),
                                                    selected_width - int(width * self.enlarge_bbox_ratio):selected_width + int(width * 1.5)]
                                          ,self.text_sys,data_lists=self.data_lists,options="Single")
-                        # cv2.imwrite("check_foloder/"+str(tickles)+str(conter_len)+".png",res_frame[selected_height:selected_height + int(height),
-                        #                            selected_width:selected_width + int(width)])
+                        cv2.imwrite("check_foloder/"+str(tickles)+str(conter_len)+".png",res_frame[selected_height:selected_height + int(height),
+                                                   selected_width:selected_width + int(width)])
                         print(i)
                         print(res_counter[1][i])
                         fix_height += height
