@@ -108,24 +108,24 @@ class OCRProcess:
                 if (res_counter[0][i][3][1] - res_counter[0][i-1][0][1]) >= height * 1.5:
                     fix_height = res_counter[0][i-1][0][1]
                     first_set = True
-                    back_res = None
                     while fix_height < res_counter[0][i][0][1]:
                         selected_height = min(int(res_counter[0][i - 1][2][1]),int(res_counter[0][i - 1][3][1])) if first_set else int(selected_height + height)
                         selected_width  = min(int(res_counter[0][i - 1][3][0]),int(res_counter[0][i][3][0]))
                         first_set = False
                         if selected_height + int(height) > res_frame.shape[0]:
                             selected_height = res_frame.shape[0]
-                        rec_res = procession(res_frame[selected_height + int(height * self.enlarge_bbox_ratio):selected_height + int(height * 1.5),
+                        rec_res = procession(res_frame[selected_height + int(height * 0.5):selected_height + int(height * 1.5),
                                                    selected_width:selected_width + int(width * 1.5)]
                                          ,self.text_sys,data_lists=self.data_lists,options="Single")
-                        back_res = rec_res
                         fix_height += height
-                        if rec_res == None or back_res == rec_res:
+                        if rec_res == None:
                             fix_height += height
                             continue
                         conter_len += 1
                         res_counter[1].insert(i - 1 + conter_len,rec_res)
+            cv2.imwrite(str(tickles)+".jpg",res_frame)
             print(res_counter[1], tickles)
+            # self._merge_drug_lists(self.candiancate,res_counter[1])
         print(res_counter[1])
         print(result_counter)
         print(self.candiancate)
