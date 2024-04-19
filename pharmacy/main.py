@@ -10,12 +10,15 @@ from qinglang.utils.utils import ClassDict, Config
 
 class MainProcess:
     def __init__(self) -> None:
-        self.source = Config("configs/source.yaml")
-
+        self.source = Config("pharmacy/configs/source.yaml")
+        multiprocessing.set_start_method('spawn')
         self.stream = VirtualCamera(self.source.virtual_camera_source)
         self.init_shared_variables()
         self.init_subprocess()
         self.catch_checker = CatchChecker()
+
+        self.stop_flag = False
+
     
     def init_shared_variables(self):
         self.frame_shared_array = multiprocessing.Array('B', 1920 * 1080 * 3)
@@ -35,6 +38,10 @@ class MainProcess:
 
     def run(self):
         for frame in self.stream:
+
+            if self.stop_flag:
+                break
+            
             self.share_frame(frame)
             
             hand_detection_results, drug_detection_results = self.parallel_inference()
@@ -46,6 +53,11 @@ class MainProcess:
             check_results = self.catch_checker.check()
 
             print(check_results)
+            self.update(frame,check_results)
+
+    
+    def update(self,frame,check_results):
+        pass
 
     def share_frame(self, frame: np.ndarray) -> None:
         np.copyto(np.frombuffer(self.frame_shared_array.get_obj(), dtype=np.uint8), frame.flatten())
@@ -67,7 +79,7 @@ class MainProcess:
 
 
 if __name__ == '__main__':
-    multiprocessing.set_start_method('spawn')
+    # multiprocessing.set_start_method('spawn')
 
     test1 = MainProcess()
     test1.run()
