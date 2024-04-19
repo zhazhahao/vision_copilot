@@ -53,7 +53,7 @@ class DrugDetectorProcess(multiprocessing.Process):
                 timestamp = int(time.time())
                 unique_filename = f'image_with_bbox_{timestamp}.jpg'
                 save_path = os.path.join(self.save_folder_path, unique_filename)
-                self.medcinedetect.plot_save(image, centerwh2xywh(np.array(bboxes[i], dtype=int)), color=(0, 0, 255), save_path=save_path, text = get_drug_name_by_index(index = int(clss[i])))  
+                self.medcine_detect.plot_save(image, centerwh2xywh(np.array(bboxes[i], dtype=int)), color=(0, 0, 255), save_path=save_path, text = get_drug_name_by_index(index = int(clss[i])))  
         self.drug_detection_outputs.put(yolo_results_list)
         ############### YOUR CODE HERE ###############
 

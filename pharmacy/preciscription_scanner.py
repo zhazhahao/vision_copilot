@@ -41,21 +41,23 @@ class OCRProcess:
                 i += 1
                 j += 1
             elif list2[j] in list1 and list1.index(list2[j]) > i:
+                if list1.index(list2[j]) == i + 1:
                     merged_list.extend(reserve_list)
-                    reserve_list = []
-                    merged_list.append(list1[i])
-                    i += 1
+                reserve_list = []
+                merged_list.append(list1[i])
+                i += 1
             else:
                 reserve_list.append(list2[j])
                 j += 1
         merged_list.extend(list1[i:])
         merged_list.extend(list2[j:])
+        merged_list.extend(reserve_list)
         for item in reversed(merged_list):
             result_list.insert(0, item) if item not in result_list else None
         return result_list
     
     def check_boundary(self,bbox_xyxy,image_xyxy,shape):
-        pass
+        bbox_xyxy[0]
     
     def scan_prescription(self):
         end_trigger_times = 0
@@ -101,32 +103,29 @@ class OCRProcess:
             for res in res_counter[0]:
                 res_frame = cv2.rectangle(res_frame, tuple(res[0].astype("int")),tuple(res[2].astype("int")),color=(0, 255, 0),thickness=-1)
             conter_len = 0 
+            first_set = True
             for i in range(1, len(res_counter[0])):
                 if (res_counter[0][i][3][1] - res_counter[0][i-1][0][1]) >= height * 1.5:
                     fix_height = res_counter[0][i-1][0][1]
+                    first_set = True
+                    back_res = None
                     while fix_height < res_counter[0][i][0][1]:
-                        selected_height = min(int(res_counter[0][i-1][3][1]),int(res_counter[0][i][3][1])) if conter_len == 0 else int(selected_height + height)
-                        selected_width  = min(int(res_counter[0][i-1][3][0]),int(res_counter[0][i][3][0]))
+                        selected_height = min(int(res_counter[0][i - 1][2][1]),int(res_counter[0][i - 1][3][1])) if first_set else int(selected_height + height)
+                        selected_width  = min(int(res_counter[0][i - 1][3][0]),int(res_counter[0][i][3][0]))
+                        first_set = False
                         if selected_height + int(height) > res_frame.shape[0]:
                             selected_height = res_frame.shape[0]
-                        # print(selected_height + int(height),selected_width + int(width))
-                        rec_res = procession(res_frame[selected_height:selected_height + int(height * 1.5),
-                                                   selected_width - int(width * self.enlarge_bbox_ratio):selected_width + int(width * 1.5)]
+                        rec_res = procession(res_frame[selected_height + int(height * self.enlarge_bbox_ratio):selected_height + int(height * 1.5),
+                                                   selected_width:selected_width + int(width * 1.5)]
                                          ,self.text_sys,data_lists=self.data_lists,options="Single")
-                        cv2.imwrite("check_foloder/"+str(tickles)+str(conter_len)+".png",res_frame[selected_height:selected_height + int(height),
-                                                   selected_width:selected_width + int(width)])
-                        print(i)
-                        print(res_counter[1][i])
+                        back_res = rec_res
                         fix_height += height
-                        if rec_res == None:
+                        if rec_res == None or back_res == rec_res:
                             fix_height += height
                             continue
-                        
                         conter_len += 1
                         res_counter[1].insert(i - 1 + conter_len,rec_res)
-            # cv2.imwrite(str(tickles)+".png",res_frame)
             print(res_counter[1], tickles)
-        
         print(res_counter[1])
         print(result_counter)
         print(self.candiancate)

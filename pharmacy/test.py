@@ -9,18 +9,11 @@ class WorkerThread(QThread, MainProcess):
     result_ready = pyqtSignal(int)  # 定义一个信号，用于在处理完成时发送结果
 
     def __init__(self):
-        # QThread.__init__(self)
-        # MainProcess.__init__(self)
         super().__init__()
 
-    def asdjaksdjaldjal(self):
-        # 与window交互
+    def export_results(self,frame,check_results):
         pass
-    def update(self,frame,check_results):
-        pass
-    def terminate():
-        QThread.terminate()
-        MainProcess.terminate()
+
 
 
 class MainWindow(QMainWindow):
