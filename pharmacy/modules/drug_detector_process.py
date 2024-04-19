@@ -7,7 +7,7 @@ from modules.yoloc_dector import YolovDector
 from modules.ocr_detector import OcrDector
 from qinglang.dataset.utils.utils import plot_xywh, xywh2xyxy, plot_xyxy, centerwh2xywh
 from utils.yolv_infer.yolov_teller import get_drug_name_by_index
-
+from qinglang.utils.utils import Config
 
 class DrugDetectorProcess(multiprocessing.Process):
     def __init__(self, inference_event: multiprocessing.Event, done_barrier: multiprocessing.Barrier, frame_shared_array: multiprocessing.Array, drug_detection_outputs: multiprocessing.Queue) -> None:
@@ -18,9 +18,10 @@ class DrugDetectorProcess(multiprocessing.Process):
         self.drug_detection_outputs = drug_detection_outputs
 
         ############### YOUR CODE HERE ###############
+        self.source = Config("configs/source.yaml")
         self.medcine_detect = YolovDector()
         self.ocr_detect = OcrDector()
-        self.save_folder_path = '/home/portable-00/VisionCopilot/pharmacy/yolotestphotos'
+        self.save_folder_path = self.source.save_folder_path
         ############### YOUR CODE HERE ###############
 
         super().__init__()
