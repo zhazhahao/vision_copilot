@@ -3,16 +3,27 @@ import random
 from PyQt6.QtCore import QThread, pyqtSignal
 from PyQt6.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QWidget, QLabel, QPushButton
 from main import MainProcess
-
+from qinglang.utils.utils import ClassDict
 
 class WorkerThread(QThread, MainProcess):
-    result_ready = pyqtSignal(int)  # 定义一个信号，用于在处理完成时发送结果
+    result_ready = pyqtSignal(ClassDict)  # 定义一个信号，用于在处理完成时发送结果
 
-    def __init__(self):
+    def __init__(self, parent):
         super().__init__()
+        self.parent = parent
+        print(self.parent)
 
-    def export_results(self,frame,check_results):
-        pass
+    def export_results(self, frame, check_results, hand_detection_results, drug_detection_results, hand_tracked, drug_tracked):
+        self.result_ready.emit(
+            ClassDict(
+                frame = frame,
+                check_results = check_results,
+                hand_detection_results = hand_detection_results,
+                drug_detection_results = drug_detection_results,
+                hand_tracked = hand_tracked,
+                drug_tracked = drug_tracked,
+            )
+        )
 
 
 
@@ -36,25 +47,25 @@ class MainWindow(QMainWindow):
         central_widget.setLayout(layout)
         self.setCentralWidget(central_widget)
 
-        self.thread = WorkerThread()
+        self.thread = WorkerThread(self)
         self.thread.result_ready.connect(self.handle_result)  # 连接信号到处理结果的方法
 
     def start_processing(self):
         self.button.setEnabled(False)  # 防止多次点击
-        data = random.randint(0, 100)  # 生成一个随机数
-        self.thread.data = data  # 将随机数传递给线程
         self.thread.start()
 
     def handle_result(self, result):
-        self.label.setText("处理结果: {}".format(result))
-        self.button.setEnabled(True)  # 处理完成后重新启用按钮
+        msg = (
+            "---------------------------------------------------------------------" "\n"
+            rf"{result.check_results}" "\n"
+            rf"{result.hand_detection_results}" "\n"
+            rf"{result.drug_detection_results}" "\n"
+            rf"{result.hand_tracked}" "\n"
+            rf"{result.drug_tracked}" "\n"
+        )
 
-    def closeEvent(self, event):
-        # 在窗口关闭时执行的函数
-        print("MainWindow is closing")
-        # 在这里可以执行你想要执行的代码
-        self.thread.terminate()
-        # event.accept()  # 确认关闭事件
+        self.label.setText(msg)
+
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)

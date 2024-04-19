@@ -41,8 +41,8 @@ class OCRProcess:
                 i += 1
                 j += 1
             elif list2[j] in list1 and list1.index(list2[j]) > i:
-                if list1.index(list2[j]) == i + 1:
-                    merged_list.extend(reserve_list)
+                # if list1.index(list2[j]) == i + 1:
+                #     merged_list.extend(reserve_list)
                 reserve_list = []
                 merged_list.append(list1[i])
                 i += 1
@@ -61,7 +61,6 @@ class OCRProcess:
     
     def scan_prescription(self):
         end_trigger_times = 0
-        max_candicated = 0
         times = 0
         res_counter = []
         result_counter = {}
@@ -71,10 +70,6 @@ class OCRProcess:
             frame = cv2.imread(r"/home/portable-00/data/images/"+filename)
             (dt_box_res,prescription,trigger) = procession(frame,self.text_sys,self.data_lists,"prescription")
             end_trigger_times += 1 if trigger else 0
-            if max_candicated < prescription.__len__():
-                max_candicated = prescription.__len__()
-                res_counter = [dt_box_res,prescription]
-                res_frame = frame
             # print(prescription)
             # a = time.time()
             for result in prescription:
@@ -90,7 +85,7 @@ class OCRProcess:
                         counts = result_counter[result].counts + 1
                     )
             # print(time.time() - a)
-            self.candiancate = self._merge_drug_lists(self.candiancate,prescription) # Waiting For implemention
+            # self.candiancate = self._merge_drug_lists(self.candiancate,prescription) # Waiting For implemention
         
         frame_collections.update({elements.tickles: ClassDict(frame=elements.res_frame, max_candicated=elements.max_candicated) 
                                   for i, elements in result_counter.items() 
@@ -99,7 +94,6 @@ class OCRProcess:
         for tickles,res_pack in frame_collections.items():   
             res_frame , res_counter= res_pack.frame , res_pack.max_candicated
             height,width = getavgSize(res_counter[0])
-            # Cover Checked places
             for res in res_counter[0]:
                 res_frame = cv2.rectangle(res_frame, tuple(res[0].astype("int")),tuple(res[2].astype("int")),color=(0, 255, 0),thickness=-1)
             conter_len = 0 
@@ -127,9 +121,9 @@ class OCRProcess:
                         conter_len += 1
                         res_counter[1].insert(i - 1 + conter_len,rec_res)
             cv2.imwrite(str(tickles)+".jpg",res_frame)
-            # print(res_counter[1], tickles)
-            # self._merge_drug_lists(self.candiancate,res_counter[1])
-        print(res_counter[1])
+            print(res_counter[1], tickles)
+            self.candiancate = self._merge_drug_lists(self.candiancate,res_counter[1])
+        res_con = [answer if not(answer in result_counter.keys() and result_counter[answer].counts == 1) else None for answer in self.candiancate]
         print(result_counter)
         print(self.candiancate)
 test = OCRProcess()
