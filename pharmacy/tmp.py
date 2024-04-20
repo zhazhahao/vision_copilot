@@ -11,7 +11,17 @@ from modules.catch_checker import CatchChecker
 from modules.camera_processor import CameraProcessor
 from qinglang.dataset.utils.utils import plot_xywh,centerwh2xywh
 from qinglang.data_structure.video.video_base import VideoFlow
+import re
 
+def remove_last_digit_and_after(string):
+    # 使用正则表达式匹配字符串中最后一个数字及其后面的字符，并替换为空字符串
+    return re.sub(r'\d+[^0-9]*$', '', string)
+
+# 示例用法
+string1 = "abc123def456aaa"
+string2 = "xyz123444aaaaa"
+print(remove_last_digit_and_after(string1))  # 输出 "abc123def"
+print(remove_last_digit_and_after(string2))  # 输出 "xyz"
 medicine_lookup_table = []
 with open("/home/portable-00/VisionCopilot/pharmacy/database/medicine_names.txt", 'r') as f:
     for line in f:

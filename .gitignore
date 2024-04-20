@@ -139,6 +139,9 @@ dmypy.json
 # MP4
 *.mp4
 
+# png
+*.png
+
 # idea
 *.idea
 
