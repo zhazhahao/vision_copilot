@@ -1,7 +1,8 @@
-import datetime
+import cv2
 import numpy as np
 import torch.multiprocessing as multiprocessing
 from copy import deepcopy
+from datetime import datetime
 from modules.cameras import VirtualCamera
 from modules.catch_checker import CatchChecker
 from modules.drug_detector_process import DrugDetectorProcess
@@ -22,8 +23,8 @@ class MainProcess:
         self.init_shared_variables()
         self.init_subprocess()
         self.catch_checker = CatchChecker()
-        
-        self.work_dir = rf"work_dirs/{datetime.now().strftime(rf"%Y%m%d-%H%M%S")}"
+        t = datetime.now().strftime(rf"%Y%m%d-%H%M%S")
+        self.work_dir = rf"work_dirs/{t}"
     
     def init_shared_variables(self):
         self.frame_shared_array = multiprocessing.Array('B', 1920 * 1080 * 3)
@@ -84,9 +85,19 @@ class MainProcess:
 
     def plot_results(self, frame, check_results, hand_detection_results, drug_detection_results, hand_tracked, drug_tracked):
         image = deepcopy(frame)
+        
         for hand in hand_detection_results:
+            plot_xywh(image, np.array(hand['bbox'], dtype=int), category=hand['category_id'])
             
-
+        for drug in drug_detection_results:
+            plot_xywh(image, np.array(drug['bbox'], dtype=int), category=drug['category_id'])
+            
+        for object_catched in check_results:
+            plot_xywh(image, np.array(object_catched.get_latest_valid_node().bbox, dtype=int), category=object_catched.category_id, color=(0, 0, 255))
+            
+        cv2.imshow('img', image)
+        cv2.waitKey(1)
+        
 if __name__ == '__main__':
     test1 = MainProcess()
     test1.run()

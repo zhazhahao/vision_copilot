@@ -2,7 +2,6 @@ import time
 import torch
 from utils.yolv_infer.curr_false import curr_false
 
-
 def procession(img, text_sys, data_lists, options="process"):
     prescription_res = []
     dt_boxes_res = []

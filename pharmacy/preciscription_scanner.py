@@ -21,6 +21,8 @@ class PreScriptionRecursiveObject:
         self.recursive_epoch = 3
         self.recursive_obj = []
         self.static_obj = []
+        self.quest_refer = {}
+        self.quest_loss = []
     def update(self, list,times) -> None:
         self.recursive_obj = self._merge_drug_lists(self.recursive_obj,list, times)
         
@@ -66,6 +68,30 @@ class PreScriptionRecursiveObject:
         # for item in reversed(merged_list):
         #     result_list.insert(0, item) if item not in result_list else None
         return merged_list
+    
+    def _check_merge_drugs(self,image):
+        if self.static_obj.__len__():
+            for i in range(len(self.static_obj)):
+                if self.static_obj[i][0] >= image[0]:
+                    break
+            j = 0
+            print(self.static_obj[i][1],image[1],self.find_positions(self.static_obj[i][1],
+                                      image[1]))
+            
+    def find_positions(self,arr1, arr2):
+        positions = []
+        used_indexes = set()  # 记录已经使用过的索引
+        for item in arr1:
+            found = False
+            for i, x in enumerate(arr2):
+                if x == item and i not in used_indexes:
+                    positions.append(i)
+                    used_indexes.add(i)
+                    found = True
+                    break
+            if not found:
+                positions.append(None)
+        return positions                                       
 
 class FrameMaxMatchingCollections(ClassDict):
     def __init__(self, *args, **kwargs) -> None:
@@ -87,9 +113,10 @@ class FrameMaxMatchingCollections(ClassDict):
     def values(self):
         return {elements.tickles: ClassDict(frame=elements.res_frame, max_candicated=elements.max_candicated) 
                               for i, elements in self.result_counter.items()}
+        
 class OCRProcess:
     def __init__(self) -> None:
-        self.test = True
+        self.test = False
         self.max_opportunity = 10
         self.enlarge_bbox_ratio = 0.2
         self.max_trigger_slam = 5
@@ -115,7 +142,6 @@ class OCRProcess:
             for res in res_counter[0]:
                 res_frame = cv2.rectangle(res_frame, tuple(res[0].astype("int")),tuple(res[2].astype("int")),color=(0, 255, 0),thickness=-1)
             conter_len = 0 
-            
             for i in range(1, len(res_counter[0])):
                 if (res_counter[0][i][3][1] - res_counter[0][i-1][0][1]) >= height * 1.5:
                     fix_height = res_counter[0][i-1][0][1]
@@ -124,7 +150,7 @@ class OCRProcess:
                         selected_height = min(int(res_counter[0][i - 1][2][1]),int(res_counter[0][i - 1][3][1])) if first_set else int(selected_height + height)
                         selected_width  = min(int(res_counter[0][i - 1][3][0]),int(res_counter[0][i][3][0]))
                         first_set = False
-                        if selected_height + int(height) > res_frame.shape[0]:
+                        if selected_height + int(height * 1.5) > res_frame.shape[0]:
                             selected_height = res_frame.shape[0]
                         rec_res = procession(res_frame[selected_height + int(height * 0.5):selected_height + int(height * 1.5),
                                                    selected_width:selected_width + int(width * 1.5)]
@@ -141,7 +167,20 @@ class OCRProcess:
                         conter_len += 1
                         counter.update([rec_res])
                         res_counter[1].insert(i - 1 + conter_len,rec_res)
-            
+            if res_counter[0].__len__() != 0:
+                selected_height = min(int(res_counter[0][0][0][1]),int(res_counter[0][0][1][1])) 
+                selected_width  = int(res_counter[0][0][2][0])                           
+                if selected_height - int(height) * 1.5 < 0:
+                    continue
+                rec_res = procession(res_frame[selected_height - int(height * 1):selected_height ,
+                                           selected_width - int(width * 0.8):selected_width + int(width * 0.5)]
+                                 ,self.text_sys,data_lists=self.data_lists,options="Single")
+                
+                cv2.imwrite("refe/"+str(filename)+"_"+str(conter_len)+".jpg",res_frame[selected_height - int(height * 1):selected_height ,
+                                           selected_width - int(width):selected_width]
+                                     )
+                if rec_res != None:
+                    res_counter[1].insert(0,rec_res)
             self.frame_collections.update(frame,max_candicated=[dt_box_res,prescription],times=times)
             if self.test:
                 cv2.imwrite(str(times)+".jpg",res_frame)
@@ -150,9 +189,13 @@ class OCRProcess:
             if end_trigger_times == self.max_opportunity:
                 print(times)
                 break
-        
         tools = self.frame_collections.values()
-        res_con = [answer if not(answer in counter.keys() and counter[answer] == 1 ) or answer in status_dict.keys() else None for answer in self.candiancate.recursive_obj]
+        for key,values in tools.items():
+            self.candiancate._check_merge_drugs([key,values["max_candicated"][1]])
+        res_con = [answer for answer in self.candiancate.recursive_obj  
+                   if not(answer in counter.keys() and counter[answer] == 1 ) or answer 
+                   in status_dict.keys()]
+        
         print(self.frame_collections.result_counter)
         print(status_dict)
         print(self.candiancate.recursive_obj)

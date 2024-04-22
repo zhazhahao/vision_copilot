@@ -21,8 +21,5 @@ def curr_false(text, data_lists, max_threshold=0.4):
         max_similarity = max(similarities)
         max_index = similarities.index(max_similarity)
         most_similar_drug = filtered_data_lists[max_index][0]
-        # if search_num_text.search(text):
-        #     print(text,most_similar_drug)
-        # print(max_similarity, most_similar_drug, text)
         if max_similarity > max_threshold:
             return most_similar_drug

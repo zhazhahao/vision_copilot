@@ -22,32 +22,4 @@ class HandDetector:
 
 
 if __name__ == '__main__':
-    hand_metainfo = Config(rf'/home/portable-00/lab/perception/qinglang/data_structure/hand/metainfo/COCO WholeBody.yaml')
-    from qinglang.data_structure.video.utils.utils import VideoFlow
-
-    hand_detector = HandDetector()
-
-    for frame in VideoFlow("/home/portable-00/VisionCopilot/pharmacy/20240313_160556/20240313_160556.mp4"):
-        results = hand_detector.detect(frame)
-        for result in results:
-            plot_xywh(frame, np.array(result['bbox'], dtype=int))
-        
-        cv2.imshow('frame', frame)
-        cv2.waitKey(10)
-        
-    
-    # from camera_processor import CameraProcessor
-    # cam_stream = CameraProcessor()
-
-    # while True:
-    #     valid, frame = cam_stream.achieve_image()
-    #     if not valid:
-    #         continue
-
-    #     results = hand_detector.detect(frame)
-    #     for result in results:
-    #         plot_xyxy(frame, np.array(result['bbox'], dtype=int))
-    #     cv2.imshow("img",frame)
-
-    #     if cv2.waitKey(1) & 0xFF == ord('q'):
-    #         break
+    ...

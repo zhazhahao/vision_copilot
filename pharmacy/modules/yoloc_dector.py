@@ -14,11 +14,8 @@ class YolovDector:
         self.source = Config("configs/source.yaml")
 
         self.model = YOLO(self.source.yolov_path)
-        self.video_flow = VideoFlow(self.source.virtual_camera_source)
         self.data = load_json(self.source.medicine_database)
         self.data_lists = load_txt(self.source.medicine_names)
-        # self.reserve_bbox = []
-
 
     def yolo_detect(self, frame):
         results = self.model(frame, verbose=False)
