@@ -9,6 +9,7 @@ from modules.catch_checker import CatchChecker
 from modules.drug_detector_process import DrugDetectorProcess
 from modules.hand_detector_process import HandDetectorProcess
 from modules.wild_ocr_process import OCRProcess
+from utils.utils import MedicineDatabase
 from qinglang.utils.utils import ClassDict, Config
 from qinglang.dataset.utils.utils import plot_xywh
 
@@ -24,6 +25,7 @@ class MainProcess:
         self.init_shared_variables()
         self.init_subprocess()
         
+        self.medicine_database = MedicineDatabase()
         self.stream = VirtualCamera(self.source.virtual_camera_source)
         self.catch_checker = CatchChecker()
  
@@ -33,7 +35,7 @@ class MainProcess:
         
         if self.config.export_results_images:
             self.image_dir = os.path.join(self.work_dir, 'images')
-            os.makedirs(self.work_dir, exist_ok=True)
+            os.makedirs(self.image_dir, exist_ok=True)
         
     def init_shared_variables(self) -> None:
         self.frame_shared_array = multiprocessing.Array('B', 1920 * 1080 * 3)
@@ -84,27 +86,29 @@ class MainProcess:
         return hand_detection_results, drug_detection_results, wild_ocr_results
 
     def export_results(self, frame, check_results, hand_detection_results, drug_detection_results, hand_tracked, drug_tracked) -> None:
-        self.plot_results(frame, check_results, hand_detection_results, drug_detection_results)        
+        if self.config.export_results_images:
+            self.plot_results(frame, check_results, hand_detection_results, drug_detection_results)
+
         print("---------------------------------------------------------------------")
-        print(check_results)
-        print(hand_detection_results)
-        print(drug_detection_results)
-        print(hand_tracked)
-        print(drug_tracked)
+        # print(check_results)
+        # print(hand_detection_results)
+        # print(drug_detection_results)
+        # print(hand_tracked)
+        # print(drug_tracked)
 
     def plot_results(self, frame, check_results, hand_detection_results, drug_detection_results):
         image = deepcopy(frame)
         
         for hand in hand_detection_results:
-            plot_xywh(image, np.array(hand['bbox'], dtype=int), category=hand['category_id'])
+            plot_xywh(image, np.array(hand['bbox'], dtype=int), category='手')
             
         for drug in drug_detection_results:
-            plot_xywh(image, np.array(drug['bbox'], dtype=int), category=drug['category_id'])
+            plot_xywh(image, np.array(drug['bbox'], dtype=int), category=self.medicine_database[drug['category_id']]['Name'])
             
         for object_catched in check_results:
-            plot_xywh(image, np.array(object_catched.get_latest_valid_node().bbox, dtype=int), category=object_catched.category_id, color=(0, 0, 255))
-            
-        cv2.imwrite(os.path.join(self.image_dir, datetime.now().strftime("%Y%m%d-%H%M%S-%f")), image)
+            plot_xywh(image, np.array(object_catched.get_latest_valid_node().bbox, dtype=int), color=(0, 0, 255))
+        
+        cv2.imwrite(os.path.join(self.image_dir, datetime.now().strftime("%Y%m%d-%H%M%S-%f") + '.jpg'), image)
         
 if __name__ == '__main__':
     test1 = MainProcess()
