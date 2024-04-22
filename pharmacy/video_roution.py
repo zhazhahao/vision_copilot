@@ -3,9 +3,10 @@ import cv2
 from modules.camera_processor import CameraProcessor
 
 if __name__ == "__main__":
-    camera = CameraProcessor(doaudio=False)
+    camera = CameraProcessor()
     camera.start()
     i = 0
+    a = time.time()
     while(True):
         try:
             bools,mat = camera.achieve_image()
@@ -15,9 +16,12 @@ if __name__ == "__main__":
             dim = (width, height)
             resized_image = cv2.resize(mat, dim, interpolation=cv2.INTER_AREA)
             if bools:
-                cv2.imwrite("/home/portable-00/VisionCopilot/pharmacy/images/"+str(i)+".jpg",mat)
-                cv2.imshow("win_name",resized_image)
+                # cv2.imwrite("/home/portable-00/VisionCopilot/pharmacy/images/"+str(i)+".jpg",mat)
+                # cv2.imshow("win_name",resized_image)
                 i = i+1
+            if time.time() - a >= 10 and time.time() - a <= 14:
+                print("Send Error")
+                camera.send_wrong()
             if cv2.waitKey(1) & 0xFF == ord('q'):
                 break
             

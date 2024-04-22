@@ -144,7 +144,7 @@ class OCRProcess:
             
             self.frame_collections.update(frame,max_candicated=[dt_box_res,prescription],times=times)
             if self.test:
-                cv2.imwrite(str(times)+".png",res_frame)
+                cv2.imwrite(str(times)+".jpg",res_frame)
             if res_counter[1].__len__() > 0:
                 self.candiancate.update(res_counter[1],times)
             if end_trigger_times == self.max_opportunity:
@@ -157,7 +157,7 @@ class OCRProcess:
         print(status_dict)
         print(self.candiancate.recursive_obj)
         
-    def getavgSize(dt_boxes):
+    def getavgSize(self,dt_boxes):
         if dt_boxes is not None and len(dt_boxes) != 0:
             rects = np.array(dt_boxes)
             heights = rects[:, 3, 1] - rects[:, 0, 1] + rects[:, 2, 1] - rects[:, 1, 1]

@@ -1,34 +1,43 @@
+import datetime
 import numpy as np
 import torch.multiprocessing as multiprocessing
+from copy import deepcopy
 from modules.cameras import VirtualCamera
 from modules.catch_checker import CatchChecker
 from modules.drug_detector_process import DrugDetectorProcess
 from modules.hand_detector_process import HandDetectorProcess
-# from modules.detect_results_stdout import stdrefresh
+from modules.wild_ocr_process import WildOcrDecetor
 from qinglang.utils.utils import ClassDict, Config
+from qinglang.dataset.utils.utils import plot_xywh
 
 
 class MainProcess:
     def __init__(self) -> None:
         multiprocessing.set_start_method('spawn')
  
+        self.config = Config("configs/main.yaml")
         self.source = Config("configs/source.yaml")
+        
         self.stream = VirtualCamera(self.source.virtual_camera_source)
         self.init_shared_variables()
         self.init_subprocess()
         self.catch_checker = CatchChecker()
+        
+        self.work_dir = rf"work_dirs/{datetime.now().strftime(rf"%Y%m%d-%H%M%S")}"
     
     def init_shared_variables(self):
         self.frame_shared_array = multiprocessing.Array('B', 1920 * 1080 * 3)
         self.inference_event = multiprocessing.Event()
-        self.done_barrier = multiprocessing.Barrier(3)
+        self.done_barrier = multiprocessing.Barrier(4)
         self.hand_detection_queue = multiprocessing.Queue()
         self.drug_detection_queue = multiprocessing.Queue()
+        self.wild_ocr_queue = multiprocessing.Queue()
 
     def init_subprocess(self) -> None:
         self.subprocesses = ClassDict(
             drug_detector = DrugDetectorProcess(self.inference_event, self.done_barrier, self.frame_shared_array, self.drug_detection_queue),
             hand_detector = HandDetectorProcess(self.inference_event, self.done_barrier, self.frame_shared_array, self.hand_detection_queue),
+            ocr_detector = WildOcrDecetor(self.inference_event, self.done_barrier, self.frame_shared_array, self.wild_ocr_queue),
         )
 
         for p in self.subprocesses.values():
@@ -38,21 +47,13 @@ class MainProcess:
         for frame in self.stream:
             self.share_frame(frame)
             
-            hand_detection_results, drug_detection_results = self.parallel_inference()
+            hand_detection_results, drug_detection_results, wild_ocr_results = self.parallel_inference()
             
             self.catch_checker.observe(hand_detection_results, drug_detection_results)
             check_results = self.catch_checker.check()
 
             self.export_results(frame, check_results, hand_detection_results, drug_detection_results, self.catch_checker.hand_tracker.tracked_objects, self.catch_checker.medicine_tracker.tracked_objects)
     
-    def export_results(self, frame, check_results, hand_detection_results, drug_detection_results, hand_tracked, drug_tracked) -> None:
-        print("---------------------------------------------------------------------")
-        print(check_results)
-        print(hand_detection_results)
-        print(drug_detection_results)
-        print(hand_tracked)
-        print(drug_tracked)
-
     def share_frame(self, frame: np.ndarray) -> None:
         np.copyto(np.frombuffer(self.frame_shared_array.get_obj(), dtype=np.uint8), frame.flatten())
 
@@ -68,9 +69,23 @@ class MainProcess:
         # get inference results
         hand_detection_results = self.hand_detection_queue.get()
         drug_detection_results = self.drug_detection_queue.get()
+        wild_ocr_results = self.wild_ocr_queue.get()
         
-        return hand_detection_results, drug_detection_results
+        return hand_detection_results, drug_detection_results, wild_ocr_results
 
+    def export_results(self, frame, check_results, hand_detection_results, drug_detection_results, hand_tracked, drug_tracked) -> None:
+        self.plot_results(frame, check_results, hand_detection_results, drug_detection_results, hand_tracked, drug_tracked)        
+        print("---------------------------------------------------------------------")
+        print(check_results)
+        print(hand_detection_results)
+        print(drug_detection_results)
+        print(hand_tracked)
+        print(drug_tracked)
+
+    def plot_results(self, frame, check_results, hand_detection_results, drug_detection_results, hand_tracked, drug_tracked):
+        image = deepcopy(frame)
+        for hand in hand_detection_results:
+            
 
 if __name__ == '__main__':
     test1 = MainProcess()

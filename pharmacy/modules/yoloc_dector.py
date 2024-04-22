@@ -1,16 +1,12 @@
-import traceback
 import cv2
 import numpy as np
 from qinglang.utils.utils import Config, load_json
 from PIL import Image, ImageDraw, ImageFont
 from utils.ocr_infer.load_data_list import load_txt
-from utils.ocr_infer.ocr_processor import procession
 from dependency.yolo.models.yolo.model import YOLO
 from qinglang.data_structure.video.video_base import VideoFlow
-from utils.yolv_infer.curr_false import curr_false
-from utils.yolv_infer.yolov_teller import find_medicine_by_name, get_drug_by_index, tensor_converter
-from utils.ocr_infer.predict_system import TextSystem
-import utils.ocr_infer.pytorchocr_utility as utility
+from utils.yolv_infer.yolov_teller import get_drug_by_index, tensor_converter
+
 
 
 class YolovDector:
@@ -19,20 +15,15 @@ class YolovDector:
 
         self.model = YOLO(self.source.yolov_path)
         self.video_flow = VideoFlow(self.source.virtual_camera_source)
-        # self.text_sys = TextSystem(utility.parse_args())
         self.data = load_json(self.source.medicine_database)
         self.data_lists = load_txt(self.source.medicine_names)
-        self.reserve_bbox = []
-        # self.back_current_shelf = ''
+        # self.reserve_bbox = []
 
-    # def scan_prescription(self, frame):
-    #     return procession(frame, self.text_sys, self.data_lists, "prescription"), self.data_lists[-2:]
 
     def yolo_detect(self, frame):
         results = self.model(frame, verbose=False)
         for result in results:
                 boxes = result.boxes
-                # probs = result.probs
                 cls, conf, xywh = boxes.cls, boxes.conf, boxes.xywh
                 if cls.__len__() == 0:
                     pass
@@ -66,11 +57,7 @@ class YolovDector:
         yolo_boxes.append([yolo_x, yolo_y, yolo_width, yolo_height])
     
         return yolo_boxes
-    
-    # def test_yolo(self):
-    #     for frame_id, frame in enumerate(self.video_flow):
-    #         result = self.yolo_detect(frame)
-    #         print(result)     
+ 
       
     def plot_save(self, image, xywh, color, thickness: int = 2, save_path: str = None, text: str = None, font_scale: float = 1, font_face: int = cv2.FONT_HERSHEY_SIMPLEX, thickness_text: int = 1, font_path: str = '/home/portable-00/VisionCopilot/pharmacy/dependency/yolo/SimHei.ttf'):  
         

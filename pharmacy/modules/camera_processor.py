@@ -1,53 +1,56 @@
 import copy
 from functools import reduce
+from multiprocessing import shared_memory
+import os
 import subprocess
 import traceback
-import signal
 
 import cv2
 import numpy as np
 import multiprocessing as mp
 
-from configs.video.video_config import *
-from utils.video.achieve_process import achieve_process
-from modules.audio_sender import send_realtime_audio_to_rtsp,ffmpeg_audio_command
-from utils.video.remove_nblock import remove_nonblock
-from utils.video.jpeg_vailder import is_jpeg_header,is_jpeg_end,has_jpeg_end
-
+from utils.videos import achieve_process, load_ffmpeg_command_from_yaml
+from modules.audio_sender import send_realtime_audio_to_rtsp
+from utils.videos import remove_nonblock
+from utils.videos import is_jpeg_header,is_jpeg_end,has_jpeg_end
+from qinglang.utils.utils import Config
 
 class CameraProcessor:
-    def __init__(self,doaudio=True):
-        self.camera_name = "FinalVersion"
+    def __init__(self,doaudio=True,rtsp_client_path="rtsp://192.168.8.100/live"):
+        self.camera_name = "DRIFTX3"
+        self.rtsp_client_path = rtsp_client_path
         self.doaudio = doaudio
-        self.exit_flag = mp.Value("i", 0)  # 退出标志，0表示不退出，1表示退出
-        self.infor_value = mp.Value("c", 0)
-        self.server_process = subprocess.Popen("./mediamtx",cwd=rtsp_server_path)
+        self.exit_flag = mp.Value("i", 0)  # Exit Mark
+        self.infor_value = mp.Value("c", 0) # Audio Mark
+        self.server_process = subprocess.Popen("./mediamtx",cwd="/home/portable-00/VisionCopilot/pharmacy/dependency/rtsp_easy_server")
+        self.config = Config("configs/video/video_config.yml")
+        ffmpeg_audio_command = load_ffmpeg_command_from_yaml('/home/portable-00/VisionCopilot/pharmacy/configs/video/configv1.yml', self.config.rtsp_server_url ,'ffmpeg_audio_command')
+        self.try_num = 0
         if doaudio:
             self.processes = [
-                mp.Process(target=self.image_put_thread,args=(self.exit_flag,)),
+                mp.Process(target=self._image_put_thread,args=(self.exit_flag,)),
                 mp.Process(target=send_realtime_audio_to_rtsp,args=(ffmpeg_audio_command,self.infor_value,self.exit_flag))
             ]
         else:
             self.processes = [
-                mp.Process(target=self.image_put_thread,args=(self.exit_flag,)),
+                mp.Process(target=self._image_put_thread,args=(self.exit_flag,)),
                 ]   
-        if os.path.exists(f"/dev/shm/{shm_name}"):
-            os.remove(f"/dev/shm/{shm_name}")
-        self.shm = shared_memory.SharedMemory("shared_image_memory",create=True,size=shared_memory_size)
+        if os.path.exists(f"/dev/shm/shared_image_memory"):
+            os.remove(f"/dev/shm/shared_image_memory")
+        self.shm = shared_memory.SharedMemory("shared_image_memory",create=True,size=self.config.shared_memory_size)
         self.start()
         
-    def image_put_thread(self,exit_flag):
-        global try_num
-            # 启动ffmpeg进程
+    def _image_put_thread(self,exit_flag):
+        ffmpeg_video_command = load_ffmpeg_command_from_yaml('/home/portable-00/VisionCopilot/pharmacy/configs/video/configv1.yml', self.rtsp_client_path ,'ffmpeg_video_command')
         ffmpeg_process = achieve_process(ffmpeg_video_command)
         try:
             back_image = b''
             while not exit_flag.value:
                 # 读取单帧图像数据
                 # a = time.time()
-                raw_image = ffmpeg_process.stdout.read(shared_memory_size)  # 假设单帧图像大小不超过 65536 字节
-                if try_num >= 3000 and raw_image is not None and len(raw_image) == 0:
-                    try_num = 0
+                raw_image = ffmpeg_process.stdout.read(self.config.shared_memory_size)  # 假设单帧图像大小不超过 65536 字节
+                if self.try_num >= 3000 and raw_image is not None and len(raw_image) == 0:
+                    self.try_num = 0
                     ffmpeg_process.terminate()
                     ffmpeg_process = achieve_process(ffmpeg_video_command)
                     # ffmpeg_process = subprocess.Popen(ffmpeg_video_command, stdout=subprocess.PIPE)
@@ -81,11 +84,11 @@ class CameraProcessor:
                                 # print(time.time() - a)
                             else:
                                 back_image = back_image + raw_image
-                    try_num = 0
+                    self.try_num = 0
                 else:
                     
-                    # print(try_num)
-                    try_num += 1
+                    # print(self.try_num)
+                    self.try_num += 1
                 # 显示图像
             exit_flag.value = 0
         except Exception as e:
@@ -120,15 +123,18 @@ class CameraProcessor:
         shm_now = copy.deepcopy(self.shm.buf.tobytes())
         # 从共享内存中读取图像大小（前五个字节）
         image_size = int.from_bytes(shm_now[:5], byteorder='big')
-        if image_size == 0 or image_size >= shared_memory_size * 10:
+        if image_size == 0 or image_size >= self.config.shared_memory_size * 10:
             # print(image_size)
             return False,None
         binary_data = shm_now[5:5+image_size]
         image = cv2.imdecode(np.frombuffer(binary_data, dtype=np.uint8), cv2.IMREAD_COLOR)
-        if image is not None and image.size == reduce((lambda x, y: x * y), resolution):
+        if image is not None and image.size == reduce((lambda x, y: x * y), self.config.resolution):
             return True,image
         return False,None
     
     def send_wrong(self):
         # print("Got wrong medicine")
         self.infor_value.value  = 1
+    
+    def properity(self):
+        return {"CameraName":self.camera_name,"Resolution":self.config.resolution}
