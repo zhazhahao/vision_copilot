@@ -3,7 +3,7 @@ import torch.multiprocessing as multiprocessing
 from modules.ocr_detector import OcrDector
 
 
-class WildOcrDecetor(multiprocessing.Process):
+class OCRProcess(multiprocessing.Process):
     def __init__(self, inference_event: multiprocessing.Event, done_barrier: multiprocessing.Barrier, frame_shared_array: multiprocessing.Array, wild_ocr_outputs: multiprocessing.Queue) -> None:
         self.inference_event = inference_event
         self.done_barrier = done_barrier
