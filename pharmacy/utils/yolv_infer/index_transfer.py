@@ -5,8 +5,8 @@ from utils.ocr_infer.load_data_list import load_txt
 
 class IndexTransfer:
     def __init__(self) -> None:
-        self.data = load_json(self.source.medicine_database)
-        self.data_lists = load_txt(self.source.medicine_names)
+        self.data = load_json('database/medicine_database.json')
+        self.data_lists = load_txt('/home/portable-00/VisionCopilot/pharmacy/database/medicine_names.txt')
 
     def cls2name(self, index: int = 0):
         if index < 0:

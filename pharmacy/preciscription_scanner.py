@@ -64,10 +64,6 @@ class PreScriptionRecursiveObject:
             print(times)
             self.static_obj.append([times,merged_list])
             merged_list = []
-        elif self.static_obj.__len__() != 0 and times - self.static_obj[self.static_obj.__len__() - 1][0] <= 10:
-            reserve_list =self.static_obj.pop()
-            merged_list = reserve_list[1]
-            return merged_list
         merged_list.extend(reserve_list)
         # for item in reversed(merged_list):
         #     result_list.insert(0, item) if item not in result_list else None

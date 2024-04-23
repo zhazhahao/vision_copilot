@@ -1,1 +1,0 @@
-from mmdeploy_runtime import Detector

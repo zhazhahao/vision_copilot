@@ -7,6 +7,7 @@ from modules.yoloc_dector import YolovDector
 from qinglang.dataset.utils.utils import centerwh2xywh
 from utils.yolv_infer.index_transfer import IndexTransfer
 from qinglang.utils.utils import Config
+from utils.utils import plot_save
 
 
 class DrugDetectorProcess(multiprocessing.Process):
@@ -44,12 +45,7 @@ class DrugDetectorProcess(multiprocessing.Process):
             bboxes = yolo_detect_results[1]
             
             yolo_results_list = [{'bbox': centerwh2xywh(bboxes[i]), 'category_id': int(clss[i])}  for i in range(len(bboxes))]
-            
-            for i in range(len(bboxes)):
-                timestamp = int(time.time())
-                unique_filename = f'image_with_bbox_{timestamp}.jpg'
-                save_path = os.path.join(self.save_folder_path, unique_filename)
-                self.medcine_detect.plot_save(image, centerwh2xywh(np.array(bboxes[i], dtype=int)), color=(0, 0, 255), save_path=save_path, text = self.index_transfer.cls2name(index = int(clss[i])))  
+ 
         self.drug_detection_outputs.put(yolo_results_list)
         ############### YOUR CODE HERE ###############
         self.done_barrier.wait()

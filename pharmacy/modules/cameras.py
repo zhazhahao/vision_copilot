@@ -34,16 +34,11 @@ class VirtualCamera(VideoFlow, CameraBase):
 
 
 class DRIFTX3(CameraBase):
-    def __init__(self, source: str) -> None:
+    def __init__(self) -> None:
         self.videoCapture = None
-        self.metainfo = ClassDict(
-            path = source,
-            root_path = os.path.dirname(source),
-            file_name = os.path.basename(source),
-        )
 
     def __iter__(self):
-        self.videoCapture = CameraProcessor(self.metainfo.path)
+        self.videoCapture = CameraProcessor()
         return self
 
     def __next__(self) -> np.ndarray:

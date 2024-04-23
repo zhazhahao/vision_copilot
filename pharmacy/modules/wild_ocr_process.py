@@ -24,7 +24,7 @@ class OCRProcess(multiprocessing.Process):
         image = np.frombuffer(self.frame_shared_array.get_obj(), dtype=np.uint8).reshape((1080, 1920, 3))
         
         result = self.ocr_detector.ocr_detect(image)
-        print(result)
+
         self.wild_ocr_outputs.put(result)
         self.done_barrier.wait()
         self.inference_event.clear()

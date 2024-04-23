@@ -4,13 +4,14 @@ import numpy as np
 import torch.multiprocessing as multiprocessing
 from copy import deepcopy
 from datetime import datetime
+from typing import List
 from modules.cameras import VirtualCamera, DRIFTX3
 from modules.catch_checker import CatchChecker
 from modules.drug_detector_process import DrugDetectorProcess
 from modules.hand_detector_process import HandDetectorProcess
 from modules.wild_ocr_process import OCRProcess
 from utils.utils import MedicineDatabase
-from qinglang.utils.utils import ClassDict, Config
+from qinglang.utils.utils import ClassDict, Config, most_common
 from qinglang.dataset.utils.utils import plot_xywh
 
 
@@ -20,24 +21,28 @@ class MainProcess:
  
         self.config = Config("configs/main.yaml")
         self.source = Config("configs/source.yaml")
-        
+
         self.init_work_dir()
         self.init_shared_variables()
         self.init_subprocess()
-        
+        self.prescription = self.get_prescription()
+
         self.medicine_database = MedicineDatabase()
-        # self.stream = VirtualCamera(self.source.virtual_camera_source)
-        self.stream = DRIFTX3(self.source.virtual_camera_source)
+        self.stream = VirtualCamera(self.source.virtual_camera_source)
+        # self.stream = DRIFTX3()
         self.catch_checker = CatchChecker()
- 
+
+    def get_prescription(self) -> List[int]:
+        ...
+    
     def init_work_dir(self) -> None:
         self.work_dir = f"work_dirs/{datetime.now().strftime('%Y%m%d-%H%M%S')}"
         os.makedirs(self.work_dir, exist_ok=True)
-        
+
         if self.config.export_results_images:
             self.image_dir = os.path.join(self.work_dir, 'images')
             os.makedirs(self.image_dir, exist_ok=True)
-        
+
     def init_shared_variables(self) -> None:
         self.frame_shared_array = multiprocessing.Array('B', 1920 * 1080 * 3)
         self.inference_event = multiprocessing.Event()
@@ -61,7 +66,10 @@ class MainProcess:
             self.share_frame(frame)
             
             hand_detection_results, drug_detection_results, ocr_results = self.parallel_inference()
-            current_shelf = self.medicine_database.__getitem__(ocr_results[0]['categaryid']).get("shelf")
+            
+            if ocr_results:
+                location = most_common([self.medicine_database[medicine['category_id']].get("Shelf") for medicine in ocr_results])
+                drug_detection_results = [drug for drug in drug_detection_results if self.medicine_database[drug['category_id']].get("Shelf") == location]
             
             self.catch_checker.observe(hand_detection_results, drug_detection_results)
             check_results = self.catch_checker.check()
