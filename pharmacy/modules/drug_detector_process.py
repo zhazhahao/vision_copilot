@@ -8,6 +8,7 @@ from qinglang.dataset.utils.utils import centerwh2xywh
 from utils.yolv_infer.index_transfer import IndexTransfer
 from qinglang.utils.utils import Config
 
+
 class DrugDetectorProcess(multiprocessing.Process):
     def __init__(self, inference_event: multiprocessing.Event, done_barrier: multiprocessing.Barrier, frame_shared_array: multiprocessing.Array, drug_detection_outputs: multiprocessing.Queue) -> None:
 

@@ -4,7 +4,7 @@ import numpy as np
 import torch.multiprocessing as multiprocessing
 from copy import deepcopy
 from datetime import datetime
-from modules.cameras import VirtualCamera
+from modules.cameras import VirtualCamera, DRIFTX3
 from modules.catch_checker import CatchChecker
 from modules.drug_detector_process import DrugDetectorProcess
 from modules.hand_detector_process import HandDetectorProcess
@@ -26,7 +26,8 @@ class MainProcess:
         self.init_subprocess()
         
         self.medicine_database = MedicineDatabase()
-        self.stream = VirtualCamera(self.source.virtual_camera_source)
+        # self.stream = VirtualCamera(self.source.virtual_camera_source)
+        self.stream = DRIFTX3(self.source.virtual_camera_source)
         self.catch_checker = CatchChecker()
  
     def init_work_dir(self) -> None:
@@ -60,12 +61,13 @@ class MainProcess:
             self.share_frame(frame)
             
             hand_detection_results, drug_detection_results, ocr_results = self.parallel_inference()
+            current_shelf = self.medicine_database.__getitem__(ocr_results[0]['categaryid']).get("shelf")
             
             self.catch_checker.observe(hand_detection_results, drug_detection_results)
             check_results = self.catch_checker.check()
 
             self.export_results(frame, check_results, hand_detection_results, drug_detection_results, self.catch_checker.hand_tracker.tracked_objects, self.catch_checker.medicine_tracker.tracked_objects)
-    
+
     def share_frame(self, frame: np.ndarray) -> None:
         np.copyto(np.frombuffer(self.frame_shared_array.get_obj(), dtype=np.uint8), frame.flatten())
 
@@ -90,11 +92,11 @@ class MainProcess:
             self.plot_results(frame, check_results, hand_detection_results, drug_detection_results)
 
         print("---------------------------------------------------------------------")
-        # print(check_results)
-        # print(hand_detection_results)
-        # print(drug_detection_results)
-        # print(hand_tracked)
-        # print(drug_tracked)
+        print(check_results)
+        print(hand_detection_results)
+        print(drug_detection_results)
+        print(hand_tracked)
+        print(drug_tracked)
 
     def plot_results(self, frame, check_results, hand_detection_results, drug_detection_results):
         image = deepcopy(frame)
@@ -109,7 +111,7 @@ class MainProcess:
             plot_xywh(image, np.array(object_catched.get_latest_valid_node().bbox, dtype=int), color=(0, 0, 255))
         
         cv2.imwrite(os.path.join(self.image_dir, datetime.now().strftime("%Y%m%d-%H%M%S-%f") + '.jpg'), image)
-        
+
 if __name__ == '__main__':
     test1 = MainProcess()
     test1.run()

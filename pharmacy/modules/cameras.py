@@ -33,15 +33,15 @@ class VirtualCamera(VideoFlow, CameraBase):
         return super().__next__()
 
 
-class DRIFTX3(VideoFlow, CameraBase):
+class DRIFTX3(CameraBase):
     def __init__(self, source: str) -> None:
-        # super().__init__(source)
         self.videoCapture = None
         self.metainfo = ClassDict(
             path = source,
             root_path = os.path.dirname(source),
             file_name = os.path.basename(source),
         )
+
     def __iter__(self):
         self.videoCapture = CameraProcessor(self.metainfo.path)
         return self
@@ -51,12 +51,14 @@ class DRIFTX3(VideoFlow, CameraBase):
         while not ret:
             ret, frame = self.videoCapture.achieve_image()
         return frame
+
     def beep(self):
         self.videoCapture.send_wrong()
-    
+
     def release(self) -> None:
         return self.videoCapture.end_process()
-    
+
+
 if __name__ == '__main__':
     vc = VirtualCamera("/mnt/nas/datasets/Pharmacy_for_label/20240313/20240313_160556/20240313_160556.mp4")
     for frame in vc:
