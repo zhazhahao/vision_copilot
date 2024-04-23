@@ -1,6 +1,6 @@
 import time
 import torch
-from utils.utils import MedicineDatabase
+from utils.yolv_infer.curr_false import curr_false
 
 def procession(img, text_sys, data_lists, options="process"):
     prescription_res = []
@@ -15,7 +15,7 @@ def procession(img, text_sys, data_lists, options="process"):
                 for i, (text, score) in enumerate(rec_res):
                     trigger = True if "合计" in text or trigger == True else False
                         
-                    text = MedicineDatabase.curr_false(text,0.6)
+                    text = curr_false(text, data_lists,0.6)
                     rec_res[i] = (text, score)
                     if text is not None:
                         dt_boxes_res.append(dt_boxes[i])
@@ -25,7 +25,7 @@ def procession(img, text_sys, data_lists, options="process"):
                 return dt_boxes, rec_res
         else:
             rec_res, predict_time = text_sys.text_recognizer([img])
-            rec_res_reu=MedicineDatabase.curr_false(rec_res[0][0], 0.4)
-            return rec_res_reu
+            rec_res=curr_false(rec_res[0][0], data_lists, 0.4)
+            return rec_res
 
     

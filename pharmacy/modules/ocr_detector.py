@@ -5,6 +5,7 @@ import numpy as np
 from qinglang.data_structure.video.video_base import VideoFlow
 from utils.yolv_infer.index_transfer import IndexTransfer
 from utils.yolv_infer.curr_false import curr_false
+from utils.utils import MedicineDatabase
 from utils.yolv_infer.yolov_teller import find_medicine_by_name
 from utils.ocr_infer.predict_system import TextSystem
 import argparse

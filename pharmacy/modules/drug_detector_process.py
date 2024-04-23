@@ -5,7 +5,7 @@ import numpy as np
 import torch.multiprocessing as multiprocessing
 from modules.yoloc_dector import YolovDector
 from qinglang.dataset.utils.utils import centerwh2xywh
-from utils.yolv_infer.yolov_teller import get_drug_name_by_index
+from utils.yolv_infer.index_transfer import IndexTransfer
 from qinglang.utils.utils import Config
 
 class DrugDetectorProcess(multiprocessing.Process):
@@ -15,7 +15,7 @@ class DrugDetectorProcess(multiprocessing.Process):
         self.done_barrier = done_barrier
         self.frame_shared_array = frame_shared_array
         self.drug_detection_outputs = drug_detection_outputs
-
+        self.index_transfer = IndexTransfer()
         ############### YOUR CODE HERE ###############
         self.source = Config("configs/source.yaml")
         self.medcine_detect = YolovDector()
@@ -48,7 +48,7 @@ class DrugDetectorProcess(multiprocessing.Process):
                 timestamp = int(time.time())
                 unique_filename = f'image_with_bbox_{timestamp}.jpg'
                 save_path = os.path.join(self.save_folder_path, unique_filename)
-                self.medcine_detect.plot_save(image, centerwh2xywh(np.array(bboxes[i], dtype=int)), color=(0, 0, 255), save_path=save_path, text = get_drug_name_by_index(index = int(clss[i])))  
+                self.medcine_detect.plot_save(image, centerwh2xywh(np.array(bboxes[i], dtype=int)), color=(0, 0, 255), save_path=save_path, text = self.index_transfer.cls2name(index = int(clss[i])))  
         self.drug_detection_outputs.put(yolo_results_list)
         ############### YOUR CODE HERE ###############
         self.done_barrier.wait()

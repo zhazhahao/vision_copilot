@@ -5,7 +5,7 @@ import cv2
 import numpy as np
 import utils.ocr_infer.pytorchocr_utility as utility
 from utils.ocr_infer.predict_system import TextSystem
-from utils.ocr_infer.ocr_processor import procession
+from utils.ocr_infer.ocr_processor_now import procession
 from utils.ocr_infer.load_data_list import load_txt
 from qinglang.utils.utils import ClassDict
 
@@ -60,10 +60,12 @@ class PreScriptionRecursiveObject:
         merged_list.extend(list1[i:])
         merged_list.extend(list2[j:])
         self.to_index = merged_list.__len__()
-        if len(reserve_list) > len(list2) - len(reserve_list):
+        if len(reserve_list) > len(list2) - len(reserve_list) and (self.static_obj.__len__() == 0 or times - self.static_obj[self.static_obj.__len__() - 1][0] > 10):
             print(times)
             self.static_obj.append([times,merged_list])
             merged_list = []
+        elif self.static_obj.__len__() != 0 and times - self.static_obj[self.static_obj.__len__() - 1][0] <= 10:
+            reserve_list =self.static_obj.pop()
         merged_list.extend(reserve_list)
         # for item in reversed(merged_list):
         #     result_list.insert(0, item) if item not in result_list else None
@@ -142,6 +144,7 @@ class OCRProcess:
             for res in res_counter[0]:
                 res_frame = cv2.rectangle(res_frame, tuple(res[0].astype("int")),tuple(res[2].astype("int")),color=(0, 255, 0),thickness=-1)
             conter_len = 0 
+            min_width = 1920
             for i in range(1, len(res_counter[0])):
                 if (res_counter[0][i][3][1] - res_counter[0][i-1][0][1]) >= height * 1.5:
                     fix_height = res_counter[0][i-1][0][1]
@@ -149,6 +152,7 @@ class OCRProcess:
                     while fix_height < res_counter[0][i][0][1]:
                         selected_height = min(int(res_counter[0][i - 1][2][1]),int(res_counter[0][i - 1][3][1])) if first_set else int(selected_height + height)
                         selected_width  = min(int(res_counter[0][i - 1][3][0]),int(res_counter[0][i][3][0]))
+                        min_width = min(min_width,selected_width)
                         first_set = False
                         if selected_height + int(height * 1.5) > res_frame.shape[0]:
                             selected_height = res_frame.shape[0]
@@ -169,17 +173,18 @@ class OCRProcess:
                         res_counter[1].insert(i - 1 + conter_len,rec_res)
             if res_counter[0].__len__() != 0:
                 selected_height = min(int(res_counter[0][0][0][1]),int(res_counter[0][0][1][1])) 
-                selected_width  = int(res_counter[0][0][2][0])                           
+                selected_width  = int(res_counter[0][0][2][0])                         
                 if selected_height - int(height) * 1.5 < 0:
                     continue
                 rec_res = procession(res_frame[selected_height - int(height * 1):selected_height ,
-                                           selected_width - int(width * 0.8):selected_width + int(width * 0.5)]
+                                           selected_width - int(width):selected_width + int(width)]
                                  ,self.text_sys,data_lists=self.data_lists,options="Single")
                 
-                cv2.imwrite("refe/"+str(filename)+"_"+str(conter_len)+".jpg",res_frame[selected_height - int(height * 1):selected_height ,
-                                           selected_width - int(width):selected_width]
+                cv2.imwrite("refe/"+str(filename)+"_"+str(conter_len)+".jpg",res_frame[selected_height - int(height * 1.5):selected_height ,
+                                           selected_width - int(width):selected_width + int(width)]
                                      )
                 if rec_res != None:
+                    print(rec_res,filename)
                     res_counter[1].insert(0,rec_res)
             self.frame_collections.update(frame,max_candicated=[dt_box_res,prescription],times=times)
             if self.test:
@@ -195,7 +200,6 @@ class OCRProcess:
         res_con = [answer for answer in self.candiancate.recursive_obj  
                    if not(answer in counter.keys() and counter[answer] == 1 ) or answer 
                    in status_dict.keys()]
-        
         print(self.frame_collections.result_counter)
         print(status_dict)
         print(self.candiancate.recursive_obj)
@@ -205,7 +209,7 @@ class OCRProcess:
             rects = np.array(dt_boxes)
             heights = rects[:, 3, 1] - rects[:, 0, 1] + rects[:, 2, 1] - rects[:, 1, 1]
             widths = rects[:, 2, 0] - rects[:, 0, 0] - rects[:, 3, 0] + rects[:, 1, 0]
-            return heights.mean()/2 , widths.mean()/2
+            return heights.max()/2 , widths.mean()/2
         else:
             return 0, 0
         
