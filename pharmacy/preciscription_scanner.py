@@ -9,9 +9,10 @@ from utils.ocr_infer.ocr_processor_now import procession
 from utils.ocr_infer.load_data_list import load_txt
 from qinglang.utils.utils import ClassDict
 
-def get_numeric_part(filename):
-    numeric_part = ''.join(filter(str.isdigit, filename))
-    return int(numeric_part) if numeric_part else 0
+from utils.utils import MedicineDatabase
+from utils.yolv_infer.curr_false import group_similar_strings
+
+
 
 class PreScriptionRecursiveObject:
     def __init__(self) -> None:
@@ -118,23 +119,38 @@ class OCRProcess:
     def __init__(self) -> None:
         self.test = False
         self.max_opportunity = 10
+        self.loss_track_threshold = 30
         self.enlarge_bbox_ratio = 0.2
-        self.max_trigger_slam = 5
         self.data_lists = load_txt("/home/portable-00/VisionCopilot/pharmacy/database/medicine_names.txt")
         self.text_sys = TextSystem(utility.parse_args())
         self.candiancate = PreScriptionRecursiveObject()
+        self.medicine_database = MedicineDatabase()
         self.frame_collections = FrameMaxMatchingCollections()
-        
+        self.finish_candidate = False
+        self.volumns = [i["Specification"].replace(" ", "") for i in self.medicine_database]
     def scan_prescription(self):
         end_trigger_times = 0
         times = 0
+        data_base = {}
+        lose_track = 0
         status_dict = {}
         res_counter = []
         counter = Counter()
-        for filename in sorted(os.listdir(r"/home/portable-00/data/images"),key=get_numeric_part):
+        for filename in sorted(os.listdir(r"/home/portable-00/data/images"),key=self.get_numeric_part):
             times += 1
             frame = cv2.imread(r"/home/portable-00/data/images/"+filename)
-            (dt_box_res,prescription,trigger) = procession(frame,self.text_sys,self.data_lists,"prescription")
+            if self.finish_candidate:
+                (dt_box_res,prescription,trigger,call_box) = procession(frame,self.text_sys,self.data_lists,"prescription")
+                if "领退药药单汇总" in prescription or "统领单(针剂)汇总" in prescription:
+                    self.candiancate.update(prescription,times)
+                    self.finish_candidate = True
+                
+            (dt_box_res,prescription,trigger,volumn_counter) = procession(frame,self.text_sys,self.data_lists[:-2],"prescription")
+            for volumn in volumn_counter:
+                if volumn in self.volumns:
+                    volumn = volumn.replace("m1","ml").replace("Ml","ml")
+                    data_base.update({x:self.medicine_database[x] for x in range(self.volumns.__len__()) if self.volumns[x] == volumn or volumn.__len__() > 4 and(volumn in self.volumns[x] )})
+                    # print(self.medicine_database[self.volumns.index(volumn)])
             end_trigger_times += 1 if trigger else 0
             counter.update(prescription)
             res_frame , res_counter= frame , [dt_box_res,prescription]
@@ -156,7 +172,7 @@ class OCRProcess:
                             selected_height = res_frame.shape[0]
                         rec_res = procession(res_frame[selected_height + int(height * 0.5):selected_height + int(height * 1.5),
                                                    selected_width:selected_width + int(width * 1.5)]
-                                         ,self.text_sys,data_lists=self.data_lists,options="Single")
+                                         ,self.text_sys,data_lists=self.data_lists[:-2],options="Single")
                         if self.test:
                             cv2.imwrite("refe/"+str(filename)+"_"+str(conter_len)+".jpg",res_frame[selected_height + int(height * 0.5):selected_height + int(height * 1.5),
                                                        selected_width:selected_width + int(width * 1.5)]
@@ -176,14 +192,16 @@ class OCRProcess:
                     continue
                 rec_res = procession(res_frame[selected_height - int(height * 1):selected_height ,
                                            selected_width - int(width):selected_width + int(width)]
-                                 ,self.text_sys,data_lists=self.data_lists,options="Single")
+                                 ,self.text_sys,data_lists=self.data_lists[:-2],options="Single")
                 
-                cv2.imwrite("refe/"+str(filename)+"_"+str(conter_len)+".jpg",res_frame[selected_height - int(height * 1.5):selected_height ,
-                                           selected_width - int(width):selected_width + int(width)]
-                                     )
+                if self.test:
+                    cv2.imwrite("refe/"+str(filename)+"_"+str(conter_len)+".jpg",res_frame[selected_height - int(height * 1.5):selected_height ,
+                                               selected_width - int(width):selected_width + int(width)]
+                                         )
                 if rec_res != None:
-                    print(rec_res,filename)
+                    # print(rec_res,filename)
                     res_counter[1].insert(0,rec_res)
+            print(res_counter[1])
             self.frame_collections.update(frame,max_candicated=[dt_box_res,prescription],times=times)
             if self.test:
                 cv2.imwrite(str(times)+".jpg",res_frame)
@@ -192,15 +210,33 @@ class OCRProcess:
             if end_trigger_times == self.max_opportunity:
                 print(times)
                 break
+            if res_counter[1].__len__() == 0:
+                lose_track += 1
+                if self.loss_track_threshold < lose_track:
+                    print("No tracking , pass down the precess")
+            else:
+                lose_track = 0
+                
         tools = self.frame_collections.values()
         for key,values in tools.items():
             self.candiancate._check_merge_drugs([key,values["max_candicated"][1]])
-        res_con = [answer for answer in self.candiancate.recursive_obj  
-                   if not(answer in counter.keys() and counter[answer] == 1 ) or answer 
-                   in status_dict.keys()]
+        # res_con = [answer for answer in self.candiancate.recursive_obj  
+        #            if not(answer in counter.keys() and counter[answer] == 1 ) or answer 
+        #            in status_dict.keys()]
+        final_con = [answer 
+                    for obj in self.candiancate.static_obj  
+                    for answer in obj[1]
+                   if counter[answer] >= 5 or (answer in status_dict and self.frame_collections.result_counter[answer].counts >= 5)]
+        # dict_all = set(final_con)
+        answer_dict = group_similar_strings(list(set(final_con)),self.frame_collections.result_counter)
         print(self.frame_collections.result_counter)
         print(status_dict)
         print(self.candiancate.recursive_obj)
+        res_dict =[ans for answer_res in answer_dict
+                for ans in answer_res]
+        print([data["Name"] if data["Name"] in res_dict else None for data in data_base.values()])
+        return [ans for answer_res in answer_dict
+                for ans in answer_res]
         
     def getavgSize(self,dt_boxes):
         if dt_boxes is not None and len(dt_boxes) != 0:
@@ -210,6 +246,10 @@ class OCRProcess:
             return heights.max()/2 , widths.mean()/2
         else:
             return 0, 0
+        
+    def get_numeric_part(self,filename):
+        numeric_part = ''.join(filter(str.isdigit, filename))
+        return int(numeric_part) if numeric_part else 0
         
 test = OCRProcess()
 test.scan_prescription()

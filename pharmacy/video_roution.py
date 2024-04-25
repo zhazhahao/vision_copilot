@@ -19,9 +19,6 @@ if __name__ == "__main__":
                 # cv2.imwrite("/home/portable-00/VisionCopilot/pharmacy/images/"+str(i)+".jpg",mat)
                 # cv2.imshow("win_name",resized_image)
                 i = i+1
-            if time.time() - a >= 10 and time.time() - a <= 14:
-                print("Send Error")
-                camera.send_wrong()
             if cv2.waitKey(1) & 0xFF == ord('q'):
                 break
             

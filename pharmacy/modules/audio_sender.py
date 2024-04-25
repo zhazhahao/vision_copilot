@@ -24,10 +24,12 @@ def send_realtime_audio_to_rtsp(ffmpeg_command,flag:mp.Value,exit_flag:mp.Value)
             if flag.value == b'\x00':
                 continue
             else:
-                print("While")
+                # print("While")
                 audio_data = generate_audio(audio_config.durations,audio_config.sample_rate,audio_config.frequency,deleash=1) 
             ffmpeg_process.stdin.write(audio_data)
             ffmpeg_process.stdin.flush()
+            if flag.value != b'\x00' :
+                time.sleep(0.2)
             flag.value = b'\x00'
     except Exception:
         traceback.print_exc()

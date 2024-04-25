@@ -15,14 +15,6 @@ from qinglang.utils.utils import ClassDict, Config, most_common
 from qinglang.dataset.utils.utils import plot_xywh
 
 
-# medicine_database = MedicineDatabase()
-
-# with open("prescription.txt", "r") as f:
-#     med_list = [line.strip() for line in f.readlines()]
-
-# med_ids = [m['Category ID'] for med in med_list for m in medicine_database.find(med)]
-
-
 class MainProcess:
     def __init__(self) -> None:
         multiprocessing.set_start_method('spawn')
@@ -41,7 +33,10 @@ class MainProcess:
         self.catch_checker = CatchChecker()
 
     def get_prescription(self) -> List[int]:
-        return self.subprocesses.ocr.scan_prescription(self.stream)
+        res = self.subprocesses.ocr.scan_prescription(self.stream)
+        while(res == None):
+            res = self.subprocesses.ocr.scan_prescription(self.stream)
+        return res
     
     def init_work_dir(self) -> None:
         self.work_dir = f"work_dirs/{datetime.now().strftime('%Y%m%d-%H%M%S')}"
@@ -81,14 +76,16 @@ class MainProcess:
             
             self.catch_checker.observe(hand_detection_results, drug_detection_results)
             check_results = self.catch_checker.check()
+
+            # print(self.prescription)
             
             for object_catched in check_results:
                 if object_catched.category_id in self.prescription:
-                    # med_ids.remove(object_catched.category_id)
                     ...
                 else:
                     self.stream.beep()
-                    print(self.medicine_database[object_catched.category_id]['Name'])
+                    print(self.medicine_database[object_catched.category_id])
+
 
             self.export_results(frame, check_results, hand_detection_results, drug_detection_results, self.catch_checker.hand_tracker.tracked_objects, self.catch_checker.medicine_tracker.tracked_objects)
 

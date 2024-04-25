@@ -41,7 +41,7 @@ class OcrDector:
         prescription_res = []
         dt_boxes_res = []
         keywords = []
-        
+        call_box = []
         with torch.no_grad():
             if options != "Single":
                 dt_boxes, rec_res = self.text_sys(img)
@@ -50,12 +50,29 @@ class OcrDector:
                     trigger = False
                     for i, (text, score) in enumerate(rec_res):
                         trigger = True if "合计" in text or trigger == True else False
-
-                        text = curr_false(text,  self.data_lists,0.6)
+                        
+                        regex = re.compile("集采|/")
+                        # 在文本中查找匹配的关键字
+                        
+                        print(text)
+                        matches = regex.search(text)
+                        if matches and score >= 0.8:
+                            text.replace(" ", "")
+                            # print(text)
+                            call_box.append(text)  
+                        pre_text = text      
+                        try:
+                            data_lis = [data for data in self.data_lists if "氨" in data[0] and data[0].index("氨") == text.index("氨")]
+                            text = curr_false(text,data_lis,0.9)
+                        except:
+                            text = curr_false(text, self.data_lists,0.8)
+                        if text == "甲氨蝶呤注射液":
+                            print(text,pre_text)  
                         rec_res[i] = (text, score)
                         if text is not None:
                             dt_boxes_res.append(dt_boxes[i])
                             prescription_res.append(text)
+                    print(call_box)
                     return dt_boxes_res,prescription_res,trigger
                 else:
                     return dt_boxes, rec_res
@@ -63,7 +80,45 @@ class OcrDector:
                 rec_res, predict_time =  self.text_sys.text_recognizer([img])
                 rec_res=self.curr_false(rec_res[0][0], 0.6)
                 return rec_res
-            
+
+    def getavgSize(self,dt_boxes):
+        if dt_boxes is not None and len(dt_boxes) != 0:
+            rects = np.array(dt_boxes)
+            heights = rects[:, 3, 1] - rects[:, 0, 1] + rects[:, 2, 1] - rects[:, 1, 1]
+            widths = rects[:, 2, 0] - rects[:, 0, 0] - rects[:, 3, 0] + rects[:, 1, 0]
+            return heights.max()/2 , widths.mean()/2
+        else:
+            return 0, 0  
+
+    def group_similar_strings(self,strings, counter):
+        groups = []
+        for string in strings:
+            # Check if the string can be added to any existing group
+            added = False
+            for group in groups:
+                for s in group:
+                    common_chars = set(string) & set(s)
+                    if len(common_chars) > 6:
+                        group.append(string)
+                        added = True
+                        break
+                if added:
+                    break
+            if not added:
+                groups.append([string])
+
+        # Filter out elements with smaller counts based on the given counter
+        filtered_groups = []
+        for group in groups:
+            filtered_group = []
+            max_num = max([counter[element]["counts"] for idx,element in enumerate(group)])
+            for idx, element in enumerate(group):
+                if counter[element]["counts"]/max_num >= 0.2:  # Adjust the threshold as needed
+                    filtered_group.append(element)
+            if filtered_group:
+                filtered_groups.append(filtered_group)
+        return filtered_groups
+
     def curr_false(self,text,max_threshold=0.4):
         search_ch_text = re.compile(r'[\u4e00-\u9fff]')
         search_brackets_text = re.compile(r'[()\[\]\u3000\uFF08\uFF09\u3010\u3011]')
