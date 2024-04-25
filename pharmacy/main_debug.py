@@ -9,7 +9,7 @@ from modules.cameras import VirtualCamera, DRIFTX3
 from modules.catch_checker import CatchChecker
 from modules.drug_detector_process import DrugDetectorProcess
 from modules.hand_detector_process import HandDetectorProcess
-from modules.wild_ocr_process import OCRProcess
+from modules.ocr_process import OCRProcess
 from utils.utils import MedicineDatabase
 from qinglang.utils.utils import ClassDict, Config, most_common
 from qinglang.dataset.utils.utils import plot_xywh
