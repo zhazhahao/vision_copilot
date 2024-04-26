@@ -201,14 +201,14 @@ class OCRProcess:
                 if rec_res != None:
                     # print(rec_res,filename)
                     res_counter[1].insert(0,rec_res)
-            print(res_counter[1])
+            # print(res_counter[1])
             self.frame_collections.update(frame,max_candicated=[dt_box_res,prescription],times=times)
-            if self.test:
-                cv2.imwrite(str(times)+".jpg",res_frame)
+
+            cv2.imwrite(str(times)+".jpg",res_frame)
             if res_counter[1].__len__() > 0:
                 self.candiancate.update(res_counter[1],times)
             if end_trigger_times == self.max_opportunity:
-                print(times)
+                # print(times)
                 break
             if res_counter[1].__len__() == 0:
                 lose_track += 1

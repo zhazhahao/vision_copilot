@@ -93,3 +93,4 @@ def plot_save(image, xywh, color, thickness: int = 2, save_path: str = None, tex
     cv2.rectangle(cv2charimg, pt1=xywh[:2], pt2=[xywh[0]+xywh[2], xywh[1]+xywh[3]], color=color, thickness=thickness)
     if save_path:
         cv2.imwrite(save_path, cv2charimg)
+

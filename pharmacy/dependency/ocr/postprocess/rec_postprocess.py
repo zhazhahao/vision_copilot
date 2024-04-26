@@ -74,7 +74,7 @@ class BaseRecLabelDecode(object):
                 else:
                     conf_list.append(1)
             text = ''.join(char_list)
-            result_list.append((text, np.mean(conf_list)))
+            result_list.append((text, np.mean(conf_list if conf_list.__len__() != 0 else np.nan)))
         return result_list
 
     def get_ignored_tokens(self):

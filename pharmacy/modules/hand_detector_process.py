@@ -1,23 +1,23 @@
 import numpy as np
 import torch.multiprocessing as multiprocessing
-from mmdeploy_runtime import Detector
 from qinglang.utils.utils import Config
 from qinglang.dataset.utils.utils import nms, xyxy2xywh
 
 
 class HandDetectorProcess(multiprocessing.Process):
     def __init__(self, inference_event: multiprocessing.Event, done_barrier: multiprocessing.Barrier, frame_shared_array: multiprocessing.Array, hand_detection_outputs: multiprocessing.Queue) -> None:
+        super().__init__()
         
         self.inference_event = inference_event
         self.done_barrier = done_barrier
         self.frame_shared_array = frame_shared_array
         self.hand_detection_outputs = hand_detection_outputs
 
-        super().__init__()
-    
     def init_process(self):
         self.config = Config('configs/hand_detection.yaml')
         self.source = Config('configs/source.yaml')
+        
+        from mmdeploy_runtime import Detector
         self.detector = Detector(model_path=self.source.onnx_path, device_name=self.config.device)
 
     def run(self) -> None:

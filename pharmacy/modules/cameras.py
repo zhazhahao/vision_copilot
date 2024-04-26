@@ -5,6 +5,11 @@ from qinglang.data_structure.video.video_base import VideoFlow
 from qinglang.utils.utils import ClassDict
 
 
+class Camera:
+    def __init__(self, src) -> None:
+        pass
+
+
 class CameraBase:
     def __init__(self) -> None:
         ...

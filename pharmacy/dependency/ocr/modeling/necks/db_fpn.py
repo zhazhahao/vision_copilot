@@ -319,11 +319,11 @@ class LKPAN(nn.Module):
         in3 = self.ins_conv[1](c3)
         in2 = self.ins_conv[0](c2)
 
-        out4 = in4 + F.upsample(
+        out4 = in4 + F.interpolate(
             in5, scale_factor=2, mode="nearest")  # 1/16
-        out3 = in3 + F.upsample(
+        out3 = in3 + F.interpolate(
             out4, scale_factor=2, mode="nearest")  # 1/8
-        out2 = in2 + F.upsample(
+        out2 = in2 + F.interpolate(
             out3, scale_factor=2, mode="nearest")  # 1/4
 
         f5 = self.inp_conv[3](in5)
@@ -346,9 +346,9 @@ class LKPAN(nn.Module):
             p3 = self.incl2(p3)
             p2 = self.incl1(p2)
 
-        p5 = F.upsample(p5, scale_factor=8, mode="nearest")
-        p4 = F.upsample(p4, scale_factor=4, mode="nearest")
-        p3 = F.upsample(p3, scale_factor=2, mode="nearest")
+        p5 = F.interpolate(p5, scale_factor=8, mode="nearest")
+        p4 = F.interpolate(p4, scale_factor=4, mode="nearest")
+        p3 = F.interpolate(p3, scale_factor=2, mode="nearest")
 
         fuse = torch.cat([p5, p4, p3, p2], dim=1)
         return fuse

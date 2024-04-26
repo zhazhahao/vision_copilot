@@ -20,7 +20,7 @@ def procession(img, text_sys, data_lists, options="process"):
                     regex = re.compile("|".join(["/"]))
                     # 在文本中查找匹配的关键字
                     matches = regex.search(text)
-                    print(text)
+                    # print(text)
                     if matches and score >= 0.8:
                         text.replace(" ", "")
                         call_box.append(text)
