@@ -128,6 +128,7 @@ class OCRProcess:
         self.frame_collections = FrameMaxMatchingCollections()
         self.finish_candidate = False
         self.volumns = [i["Specification"].replace(" ", "") for i in self.medicine_database]
+    
     def scan_prescription(self):
         end_trigger_times = 0
         times = 0

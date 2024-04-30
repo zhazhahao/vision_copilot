@@ -28,67 +28,17 @@ class OcrDector:
         self.reserve_bbox = []
 
     def ocr_detect(self, frame):
-        ocr_dt_boxes, ocr_rec_res = self.procession(frame, "process")
+        ocr_dt_boxes, ocr_rec_res = self.text_sys(frame)
+        # ocr_dt_boxes, ocr_rec_res = self.procession(frame, "process")
         matching_medicines = [{"category_id":answer["Category ID"], "bbox":self.bbox_to_xywh(ocr_dt_boxes[i])}
             for i in range(len(ocr_dt_boxes)) if curr_false(ocr_rec_res[i][0], self.data_lists[:-2]) is not None
             for answer in self.database.find(curr_false(ocr_rec_res[i][0], self.data_lists[:-2]))]
+        # print(matching_medicines)
         return matching_medicines 
 
     def bbox_to_xywh(self,bbox):
         return np.array([np.mean(bbox[:, 0]), np.mean(bbox[:, 1]), np.max(bbox[:, 0]) - np.min(bbox[:, 0]),np.max(bbox[:, 1]) - np.min(bbox[:, 1])])
 
-    def procession(self,img, options="process"):
-        prescription_res = []
-        dt_boxes_res = []
-        keywords = []
-        call_box = []
-        with torch.no_grad():
-            if options != "Single":
-                dt_boxes, rec_res = self.text_sys(img)
-                # print(rec_res)
-                if options == "prescription":
-                    trigger = False
-                    for i, (text, score) in enumerate(rec_res):
-                        trigger = True if "合计" in text or trigger == True else False
-                        
-                        regex = re.compile("集采|/")
-                        # 在文本中查找匹配的关键字
-                        
-                        print(text)
-                        matches = regex.search(text)
-                        if matches and score >= 0.8:
-                            text.replace(" ", "")
-                            # print(text)
-                            call_box.append(text)  
-                        pre_text = text      
-                        try:
-                            data_lis = [data for data in self.data_lists if "氨" in data[0] and data[0].index("氨") == text.index("氨")]
-                            text = curr_false(text,data_lis,0.9)
-                        except:
-                            text = curr_false(text, self.data_lists,0.8)
-                        if text == "甲氨蝶呤注射液":
-                            print(text,pre_text)  
-                        rec_res[i] = (text, score)
-                        if text is not None:
-                            dt_boxes_res.append(dt_boxes[i])
-                            prescription_res.append(text)
-                    print(call_box)
-                    return dt_boxes_res,prescription_res,trigger
-                else:
-                    return dt_boxes, rec_res
-            else:
-                rec_res, predict_time =  self.text_sys.text_recognizer([img])
-                rec_res=self.curr_false(rec_res[0][0], 0.6)
-                return rec_res
-
-    def getavgSize(self,dt_boxes):
-        if dt_boxes is not None and len(dt_boxes) != 0:
-            rects = np.array(dt_boxes)
-            heights = rects[:, 3, 1] - rects[:, 0, 1] + rects[:, 2, 1] - rects[:, 1, 1]
-            widths = rects[:, 2, 0] - rects[:, 0, 0] - rects[:, 3, 0] + rects[:, 1, 0]
-            return heights.max()/2 , widths.mean()/2
-        else:
-            return 0, 0  
 
     def group_similar_strings(self,strings, counter):
         groups = []

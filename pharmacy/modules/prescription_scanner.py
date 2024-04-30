@@ -1,14 +1,17 @@
 
 from collections import Counter
 import multiprocessing
+import re
 
 import cv2
 import numpy as np
+import torch
 
 from utils.ocr_infer.prescription_utils import FrameMaxMatchingCollections, PreScriptionRecursiveObject
+from utils.utils import curr_false
 
 
-class Prescription_Scanner(multiprocessing.Process):
+class PrescriptionScanner(multiprocessing.Process):
     def __init__(self) -> None:   
         self.max_opportunity = 10
         self.enlarge_bbox_ratio = 0.2
@@ -26,19 +29,19 @@ class Prescription_Scanner(multiprocessing.Process):
 
     def scan_prescription(self,stream):
         for frame in stream:
-            times += 1
+            self.times += 1
             if not self.finish_candidate:
-                (dt_box_res,prescription,trigger) = self.ocr_detector.procession(frame,"prescription")
+                (dt_box_res,prescription,trigger) = self.procession(frame,"prescription")
                 # print(prescription)
                 if "领退药药单汇总" in prescription or "统领单(针剂)汇总" in prescription:
-                    self.candiancate.update(prescription,times)
+                    self.candiancate.update(prescription,self.times)
                     self.finish_candidate = True
                 continue
-            (dt_box_res,prescription,trigger) = self.ocr_detector.procession(frame,"prescription")
+            (dt_box_res,prescription,trigger) = self.procession(frame,"prescription")
             self.end_trigger_times += 1 if trigger else 0
             self.counter.update(prescription)
             res_frame , res_counter= frame , [dt_box_res,prescription]
-            height,width = self.ocr_detector.getavgSize(res_counter[0])
+            height,width = self.getavgSize(res_counter[0])
             for res in res_counter[0]:
                 res_frame = cv2.rectangle(res_frame, tuple(res[0].astype("int")),tuple(res[2].astype("int")),color=(0, 255, 0),thickness=-1)
             conter_len = 0 
@@ -54,7 +57,7 @@ class Prescription_Scanner(multiprocessing.Process):
                         first_set = False
                         if selected_height + int(height * 1.5) > res_frame.shape[0]:
                             selected_height = res_frame.shape[0] - int(height * 1.5)
-                        rec_res = self.ocr_detector.procession(res_frame[selected_height + int(height * 0.5):selected_height + int(height * 1.5),
+                        rec_res = self.procession(res_frame[selected_height + int(height * 0.5):selected_height + int(height * 1.5),
                                                    selected_width:selected_width + int(width * 1.5)],options="Single")
                         # print(prescription)
                         self.status_dict[rec_res] = "Update"
@@ -77,16 +80,16 @@ class Prescription_Scanner(multiprocessing.Process):
                 if selected_width + int(width) > 1920:
                     selected_width = 1920 - int(width)
 
-                rec_res = self.ocr_detector.procession(res_frame[selected_height - int(height * 1):selected_height ,
+                rec_res = self.procession(res_frame[selected_height - int(height * 1):selected_height ,
                                            selected_width - int(width):selected_width + int(width)]
                                  ,options="Single")
                 if rec_res != None:
                     res_counter[1].insert(0,rec_res)
-            self.frame_collections.update(frame,max_candicated=[dt_box_res,prescription],times=times)
+            self.frame_collections.update(frame,max_candicated=[dt_box_res,prescription],times= self.times)
             # print(end_trigger_times)  
             # print(loss_track_threshold)
             if res_counter[1].__len__() > 0:
-                self.candiancate.update(res_counter[1],times)
+                self.candiancate.update(res_counter[1],self.times)
                 loss_track_threshold = 0
             else:
                 loss_track_threshold += 1
@@ -121,6 +124,52 @@ class Prescription_Scanner(multiprocessing.Process):
         return [ans for answer_res in answer_dict
                 for ans in answer_res if ans != "统领单(针剂)汇总" or ans != "领退药药单汇总"]
 
-    def merge_packages(self):
-        return [ans for answer_res in answer_dict
-                for ans in answer_res if ans != "统领单(针剂)汇总" or ans != "领退药药单汇总"]
+    def getavgSize(self,dt_boxes):
+        if dt_boxes is not None and len(dt_boxes) != 0:
+            rects = np.array(dt_boxes)
+            heights = rects[:, 3, 1] - rects[:, 0, 1] + rects[:, 2, 1] - rects[:, 1, 1]
+            widths = rects[:, 2, 0] - rects[:, 0, 0] - rects[:, 3, 0] + rects[:, 1, 0]
+            return heights.max()/2 , widths.mean()/2
+        else:
+            return 0, 0  
+    
+    def procession(self,rec_ress, options="process"):
+        prescription_res = []
+        dt_boxes_res = []
+        call_box = []
+        with torch.no_grad():
+            if options != "Single":
+                dt_boxes, rec_res = rec_ress
+                # print(rec_res)
+                if options == "prescription":
+                    trigger = False
+                    for i, (text, score) in enumerate(rec_res):
+                        trigger = True if "合计" in text or trigger == True else False
+                        
+                        regex = re.compile("集采|/")
+                        # 在文本中查找匹配的关键字
+                        
+                        print(text)
+                        matches = regex.search(text)
+                        if matches and score >= 0.8:
+                            text.replace(" ", "")
+                            # print(text)
+                            call_box.append(text)  
+                        pre_text = text      
+                        try:
+                            data_lis = [data for data in self.data_lists if "氨" in data[0] and data[0].index("氨") == text.index("氨")]
+                            text = curr_false(text,data_lis,0.9)
+                        except:
+                            text = curr_false(text, self.data_lists,0.8)
+                        rec_res[i] = (text, score)
+                        if text is not None:
+                            dt_boxes_res.append(dt_boxes[i])
+                            prescription_res.append(text)
+                    print(call_box)
+                    return dt_boxes_res,prescription_res,trigger
+                else:
+                    return dt_boxes, rec_res
+            else:
+                rec_res, predict_time =  self.text_sys.text_recognizer([img])
+                rec_res=self.curr_false(rec_res[0][0], 0.6)
+                return rec_res

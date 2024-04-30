@@ -1,13 +1,9 @@
-import os
-import time
-import cv2
 import numpy as np
 import torch.multiprocessing as multiprocessing
 from modules.yoloc_dector import YolovDector
 from qinglang.dataset.utils.utils import centerwh2xywh
 from utils.yolv_infer.index_transfer import IndexTransfer
 from qinglang.utils.utils import Config
-from utils.utils import plot_save
 
 
 class DrugDetectorProcess(multiprocessing.Process):

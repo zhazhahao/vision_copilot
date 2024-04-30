@@ -33,6 +33,7 @@ class MainProcess:
         self.status = ClassDict(
             current_task = 'check' if isinstance(self.stream, VirtualCamera) else 'scan'
         )
+        self.prescription = []
 
     def _init_work_dir(self) -> None:
         self.work_dir = f"work_dirs/{datetime.now().strftime('%Y%m%d-%H%M%S')}"
@@ -73,8 +74,11 @@ class MainProcess:
                 self.prescription = self.get_prescription()
                 self.drugs_caught = []
                 
-                self.status.current_task == 'check'
+                prescription = self.get_prescription(frame)
+                propose_possible_bbox = self.propose_possible_bbox()
+                prescription_rec = self.get_prescription(propose_possible_bbox)
                 
+                self.status.current_task == 'check'
             if self.status.current_task == 'check':
                 hand_detection_results, drug_detection_results, ocr_results = self.parallel_inference()
                 
