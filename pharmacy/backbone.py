@@ -1,10 +1,6 @@
-import os
-import cv2
 import numpy as np
 import torch.multiprocessing as multiprocessing
-from copy import deepcopy
-from datetime import datetime
-from typing import List
+from typing import List, Dict
 from modules.cameras import CameraBase
 from modules.catch_checker import CatchChecker
 from modules.drug_detector_process import DrugDetectorProcess
@@ -12,27 +8,26 @@ from modules.hand_detector_process import HandDetectorProcess
 from modules.ocr_process import OCRProcess
 from utils.utils import MedicineDatabase
 from qinglang.utils.utils import ClassDict, Config, most_common
-from qinglang.dataset.utils.utils import plot_xywh, plot_xywh_pil
 
 
-class MainProcess:
+class Backbone:
     def __init__(self) -> None:
         multiprocessing.set_start_method('spawn')
  
         self.config = Config("configs/main.yaml", "configs/stream.yaml")
         self.source = Config("configs/source.yaml")
 
+        self.medicine_database = MedicineDatabase()
+        self.catch_checker = CatchChecker()
+        
         self._init_shared_variables()
         self._init_subprocess()
-        
+
         self.stream: CameraBase = ...
-        self.medicine_database: MedicineDatabase = ...
-        self.catch_checker: CatchChecker = ...
-        
         self.prescription: List = ...
 
     def _init_shared_variables(self) -> None:
-        self.frame_shared_array = multiprocessing.Array('B', np.prod(self.config.resolution))
+        self.frame_shared_array = multiprocessing.Array('B', int(np.prod(self.config.resolution)))
 
         self.ocr_event = multiprocessing.Event()
         self.ocr_done_barrier = multiprocessing.Barrier(2)
@@ -56,80 +51,53 @@ class MainProcess:
 
     def run(self) -> None:
         for frame in self.stream:
-            self.share_frame_to_memory(frame)
+            self._share_frame_to_memory(frame)
 
-            hand_detection_results, drug_detection_results, ocr_results = self.parallel_inference()
-            
+            hand_detection_results, drug_detection_results, ocr_results = self._parallel_inference()
+
             if ocr_results != []:
-                drug_detection_results = self.fiter_drug_detection_results(ocr_results, drug_detection_results)
+                drug_detection_results = self._fiter_drug_detection_results(ocr_results, drug_detection_results)
 
             self.catch_checker.observe(hand_detection_results, drug_detection_results)
             check_results = self.catch_checker.check()
-            
-            if self.prescription != []:
-                self.check_prescription(check_results)
 
-            self.export_results(frame, check_results, hand_detection_results, drug_detection_results, self.catch_checker.hand_tracker.tracked_objects, self.catch_checker.medicine_tracker.tracked_objects)
+            self.post_process(frame, check_results, hand_detection_results, drug_detection_results, self.catch_checker.hand_tracker.tracked_objects, self.catch_checker.medicine_tracker.tracked_objects)
 
-    def share_frame_to_memory(self, frame: np.ndarray) -> None:
+    def _share_frame_to_memory(self, frame: np.ndarray) -> None:
         np.copyto(np.frombuffer(self.frame_shared_array.get_obj(), dtype=np.uint8), frame.flatten())
 
-    def parallel_inference(self) -> None:
+    def _parallel_inference(self) -> None:
         # start parallel inference
         self.detection_event.set()
         self.ocr_event.set()
         self.detection_done_barrier.wait()
         self.ocr_done_barrier.wait()
-        
+
         # finish parallel inference
         self.detection_event.clear()
         self.ocr_event.clear()
         self.detection_done_barrier.reset()
         self.ocr_done_barrier.reset()
-        
+
         # get inference results
         hand_detection_results = self.hand_detection_queue.get()
         drug_detection_results = self.drug_detection_queue.get()
         ocr_results = self.ocr_queue.get()
-        
+
         return hand_detection_results, drug_detection_results, ocr_results
-    
-    def fiter_drug_detection_results(self, ocr_results, drug_detection_results):
+
+    def _fiter_drug_detection_results(self, ocr_results: List[Dict], drug_detection_results: List[Dict]) -> List[Dict]:
         location = most_common([self.medicine_database[medicine['category_id']].get("Shelf") for medicine in ocr_results])
         return [drug for drug in drug_detection_results if self.medicine_database[drug['category_id']].get("Shelf") == location]
-    
-    def check_prescription(self, check_results):
-        for object_catched in check_results:
-            if object_catched.category_id in self.prescription and object_catched.category_id not in self.drugs_caught:
-                self.drugs_caught.append(object_catched.category_id)
-            else:
-                self.stream.beep()
-                
-    def export_results(self, frame, check_results, hand_detection_results, drug_detection_results, hand_tracked, drug_tracked) -> None:
-        if self.config.export_results_images:
-            self.plot_results(frame, check_results, hand_detection_results, drug_detection_results)
 
-        print("---------------------------------------------------------------------")
-        print(check_results)
-        print(hand_detection_results)
-        print(drug_detection_results)
-        print(hand_tracked)
-        print(drug_tracked)
+    def post_process(self, frame, check_results, hand_detection_results, drug_detection_results, hand_tracked, drug_tracked) -> None:
+        ...
 
-    def plot_results(self, frame, check_results, hand_detection_results, drug_detection_results):
-        image = deepcopy(frame)
-        
-        for hand in hand_detection_results:
-            image = plot_xywh_pil(image, np.array(hand['bbox'], dtype=int), category='手')
-            
-        for drug in drug_detection_results:
-            image = plot_xywh_pil(image, np.array(drug['bbox'], dtype=int), category=self.medicine_database[drug['category_id']]['Name'])
-            
-        for object_catched in check_results:
-            image = plot_xywh_pil(image, np.array(object_catched.get_latest_valid_node().bbox, dtype=int), color=(0, 0, 255))
-        
-        cv2.imwrite(os.path.join(self.image_dir, datetime.now().strftime("%Y%m%d-%H%M%S-%f") + '.jpg'), image)
 
 if __name__ == '__main__':
-    test1 = MainProcess()
-    test1.run()
+    from modules.cameras import VirtualCamera
+    
+    backbone = Backbone()
+    backbone.stream = VirtualCamera(backbone.source.virtual_camera_source)
+
+    backbone.run()

@@ -7,6 +7,7 @@ from utils.yolv_infer.index_transfer import IndexTransfer
 from qinglang.utils.utils import ClassDict, load_json
 from PIL import Image, ImageDraw, ImageFont
 
+
 class MedicineDatabase:
     def __init__(self) -> None:
         self.data = load_json('database/medicine_database_en.json')

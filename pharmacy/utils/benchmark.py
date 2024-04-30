@@ -36,14 +36,19 @@ class Benchmark:
             for result in results:
                 boxes = result.boxes
                 cls = boxes.cls
-                if cls== annotations[frame_idx]:
-                    correct_count += 1
+                if cls.numel() == 0:
+                    continue
                 else:
-                    error_frames.append(frame_idx)
+                    if int(cls[0].item()) == annotations[frame_idx]:
+                        
+                        correct_count += 1
+                    else:
+                        error_frames.append(frame_idx)
 
         accuracy = correct_count / frame_count
         error_rate = 1 - accuracy
-
+        print(frame_count)
+        print(correct_count)
         return accuracy, error_rate, error_frames
     
     # list[clsids]
@@ -54,15 +59,15 @@ class Benchmark:
         # 遍历images列表中的每个图像对象
         for image in data["images"]:
             # 使用图像的id作为键，标注的id列表作为值
-            annotations[image["id"]] = image["annotation_ids"][0]
+            annotations[int(image["id"])] = int(image["annotation_ids"][0])
 
         # 获取视频的总帧数
         cap, _, _ = self.load_video()
         frame_count = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
-        cap.release()  # 记得释放资源
+        cap.release()  
 
         # 初始化一个与视频帧数相同长度的列表，并填充默认值
-        image_annotation_list = [None] * frame_count
+        image_annotation_list = [-1] * frame_count
 
         # 使用图像ID作为索引赋值
         for image_id, annotation_id in annotations.items():
