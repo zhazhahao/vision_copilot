@@ -12,6 +12,7 @@ class HandDetectorProcess(multiprocessing.Process):
         self.done_barrier = done_barrier
         self.frame_shared_array = frame_shared_array
         self.hand_detection_outputs = hand_detection_outputs
+        self.daemon = True
 
     def init_process(self):
         self.config = Config('configs/hand_detection.yaml')

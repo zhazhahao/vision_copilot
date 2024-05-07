@@ -1,3 +1,4 @@
+import sys
 import numpy as np
 import torch.multiprocessing as multiprocessing
 from typing import List, Dict
@@ -62,7 +63,9 @@ class Backbone:
             check_results = self.catch_checker.check()
 
             self.post_process(frame, check_results, hand_detection_results, drug_detection_results, self.catch_checker.hand_tracker.tracked_objects, self.catch_checker.medicine_tracker.tracked_objects)
-
+        
+        sys.exit()
+        
     def _share_frame_to_memory(self, frame: np.ndarray) -> None:
         np.copyto(np.frombuffer(self.frame_shared_array.get_obj(), dtype=np.uint8), frame.flatten())
 
@@ -92,12 +95,14 @@ class Backbone:
 
     def post_process(self, frame, check_results, hand_detection_results, drug_detection_results, hand_tracked, drug_tracked) -> None:
         ...
+        print(check_results)
 
 
 if __name__ == '__main__':
     from modules.cameras import VirtualCamera
-    
+
     backbone = Backbone()
-    backbone.stream = VirtualCamera(backbone.source.virtual_camera_source)
+    # backbone.stream = VirtualCamera(backbone.source.virtual_camera_source)
+    backbone.stream = VirtualCamera("/home/portable-00/data/video_0/20240313_160556.mp4")
 
     backbone.run()

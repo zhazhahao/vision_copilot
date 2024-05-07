@@ -1,5 +1,5 @@
 import numpy as np
-import torch.multiprocessing as multiprocessing
+import multiprocessing as multiprocessing
 from modules.yoloc_dector import YolovDector
 from qinglang.dataset.utils.utils import centerwh2xywh
 from utils.yolv_infer.index_transfer import IndexTransfer
@@ -8,19 +8,21 @@ from qinglang.utils.utils import Config
 
 class DrugDetectorProcess(multiprocessing.Process):
     def __init__(self, inference_event: multiprocessing.Event, done_barrier: multiprocessing.Barrier, frame_shared_array: multiprocessing.Array, drug_detection_outputs: multiprocessing.Queue) -> None:
-
+        super().__init__()
+        
         self.inference_event = inference_event
         self.done_barrier = done_barrier
         self.frame_shared_array = frame_shared_array
         self.drug_detection_outputs = drug_detection_outputs
-        self.index_transfer = IndexTransfer()
+        
         ############### YOUR CODE HERE ###############
+        self.index_transfer = IndexTransfer()
         self.source = Config("configs/source.yaml")
         self.medcine_detect = YolovDector()
         self.save_folder_path = self.source.save_folder_path
         ############### YOUR CODE HERE ###############
 
-        super().__init__()
+        self.daemon = True
 
     def run(self):
         while True:

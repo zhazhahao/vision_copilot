@@ -2,25 +2,24 @@ from collections import Counter
 import cv2
 import numpy as np
 import torch.multiprocessing as multiprocessing
-from modules.ocr_detector import OcrDector
 from utils.ocr_infer.prescription_utils import FrameMaxMatchingCollections, PreScriptionRecursiveObject
 
 
 class OCRProcess(multiprocessing.Process):
     def __init__(self, inference_event: multiprocessing.Event, done_barrier: multiprocessing.Barrier, frame_shared_array: multiprocessing.Array, wild_ocr_outputs: multiprocessing.Queue) -> None:
+        super().__init__()
         self.inference_event = inference_event
         self.done_barrier = done_barrier
         self.frame_shared_array = frame_shared_array
         self.wild_ocr_outputs = wild_ocr_outputs        
-        self.max_opportunity = 10
-        self.enlarge_bbox_ratio = 0.2
-        self.loss_track_threshold = 60
-        self.frame_collections = FrameMaxMatchingCollections()
-        self.candiancate = PreScriptionRecursiveObject()
+        self.daemon = True
+        
+    def init_process(self):
+        from modules.ocr_detector import OcrDector
         self.ocr_detector = OcrDector()
         self.finish_candidate = False
-        super().__init__()
 
+        
     def scan_prescription(self,stream):
         end_trigger_times = 0
         times = 0
@@ -124,11 +123,12 @@ class OCRProcess(multiprocessing.Process):
         return [ans for answer_res in answer_dict
                 for ans in answer_res if ans != "统领单(针剂)汇总" or ans != "领退药药单汇总"]
         
-    def run(self):
+    def run(self) -> None:
+        self.init_process()
         while True:
             self.inference_event.wait()
             self.execute()
-    
+
     
     def execute(self) -> None:
         image = np.frombuffer(self.frame_shared_array.get_obj(), dtype=np.uint8).reshape((1080, 1920, 3))

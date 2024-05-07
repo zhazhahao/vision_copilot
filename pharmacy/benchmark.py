@@ -1,19 +1,74 @@
 import json
 import cv2
+import numpy as np
+from itertools import groupby
+from typing import Dict, List
 from ultralytics import YOLO
-from qinglang.utils.utils import Config
 from backbone import Backbone
+from modules.cameras import VirtualCamera
+from qinglang.utils.utils import Config, ClassDict, load_json, load_yaml
 
 
-class TempName(Backbone):
-    def __init__(self) -> None:
+class InferenceEngine(Backbone):
+    def __init__(self, logger: ClassDict) -> None:
         super().__init__()
         
-        self.stream = ...
-        self.prescription = ...
+        self.logger = logger
 
     def post_process(self, frame, check_results, hand_detection_results, drug_detection_results, hand_tracked, drug_tracked):
-        ...
+        self.logger.check_results.append(check_results)
+        self.logger.hand_detection_results.append(hand_detection_results)
+        self.logger.drug_detection_results.append(drug_detection_results)
+
+
+class PharmacyCopilotBenchmark:
+    def __init__(self) -> None:
+        self.config = Config("configs/benchmark.yaml")
+        
+    def benchmark(self, dataset: ClassDict) -> None:
+        logger = ClassDict(
+            check_results = [],
+            hand_detection_results = [],
+            drug_detection_results = [],
+        )
+        
+        engine = InferenceEngine(logger)s
+        engine.stream = VirtualCamera(dataset.video)
+        engine.prescription = load_yaml(dataset.prescription)
+        
+        annotations = load_json(dataset.annotations)
+        catch_checking_sequence: List = ...
+        
+        engine.run()
+        
+        logger = ClassDict(**{key: np.array(value) for key, value in logger})
+
+        # catch checking examination
+        catch_count = 0
+        catch_tp_count = 0
+        catch_fp_count = 0
+        
+        for drug_id, frame_idxes in self.group_consecutive_elements(catch_checking_sequence):
+            predictions = {element: count for element, count in zip(np.unique(logger.check_results[frame_idxes], return_counts=True))}
+
+            if drug_id != None:
+                catch_count += 1
+                
+                if predictions.get(drug_id):
+                    catch_tp_count += 1
+            
+            catch_fp_count += len([key for key in predictions.keys() if key not in [None, drug_id]])
+        
+        catch_checking_recall = catch_tp_count / catch_count
+            
+    def group_consecutive_elements(lst):
+        groups = []
+        current_index = 0
+        for key, group in groupby(lst):
+            group_length = len(list(group))
+            groups.append((key, current_index + np.arange(group_length)))
+            current_index += group_length
+        return groups
 
 
 class Benchmark:
@@ -34,7 +89,12 @@ class Benchmark:
         # 基准测试模型
         cap, frame_count, fps = self.load_video()
         annotations_dict,annotations_lenth = self.load_annotations()
-        
+        Tp = 0
+        Tn = 0
+        Postive = 0
+        Negative = 0
+        Fn = 0
+        Fp = 0
         correct_count = 0
         error_frames = []
         
@@ -44,31 +104,42 @@ class Benchmark:
                 break
 
             # 假设模型推断函数是 predict_frame，返回预测结果
-            results= self.model(frame)
+            results= self.model(frame, verbose=False)
             for result in results:
                 boxes = result.boxes
                 cls = boxes.cls
                 if cls.numel() == 0:
                     if annotations_dict[frame_idx] == -1:
-                        correct_count += 1
+                        Tn += 1
+                        Negative += 1
                         continue
                     else:
+                        Fn += 1
+                        Postive += 1
                         error_frames.append(frame_idx)
                 else:
+                    if annotations_dict[frame_idx] == -1:
+                        Negative += 1
+                        Fp += 1
+                        continue
                     if int(cls[0].item()) == annotations_dict[frame_idx]:
-                        
-                        correct_count += 1
+                        Postive += 1
+                        Tp += 1
                     else:
-                        if annotations_dict[frame_idx] == -1:
-                            continue
-                        else:
-                            error_frames.append(frame_idx)
+                        Fp += 1
+                        Postive += 1
+                        error_frames.append(frame_idx)
 
-        accuracy = correct_count / annotations_lenth
+        accuracy = (Tp + Tn) / (Tp + Tn + Fp + Fn)
+        precision = Tp / (Tp + Fp)
+        recall = Tp / Postive
         error_rate = 1 - accuracy
         print(annotations_lenth)
         print(correct_count)
         print(len(error_frames))
+        print("precision:" + str(precision))
+        print("recall:" + str(recall))
+
         return accuracy, error_rate, error_frames
     
     # list[clsids]
@@ -103,5 +174,5 @@ class Benchmark:
 test = Benchmark()
 accuracy, error_rate, error_frames =  test.benchmark_model()
 print("Accuracy:", accuracy)
-print("Error rate:", error_rate)
-print("Error frames:", error_frames)
+# print("Error rate:", error_rate)
+# print("Error frames:", error_frames)
