@@ -32,7 +32,7 @@ class PharmacyCopilotBenchmark:
             drug_detection_results = [],
         )
         
-        engine = InferenceEngine(logger)s
+        engine = InferenceEngine(logger)
         engine.stream = VirtualCamera(dataset.video)
         engine.prescription = load_yaml(dataset.prescription)
         
