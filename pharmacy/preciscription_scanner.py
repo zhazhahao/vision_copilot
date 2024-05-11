@@ -115,6 +115,7 @@ class FrameMaxMatchingCollections(ClassDict):
         return {elements.tickles: ClassDict(frame=elements.res_frame, max_candicated=elements.max_candicated) 
                               for i, elements in self.result_counter.items()}
         
+        
 class OCRProcess:
     def __init__(self) -> None:
         self.test = False

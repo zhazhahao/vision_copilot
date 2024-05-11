@@ -14,7 +14,7 @@ from dependency.ocr.base_ocr_v20 import BaseOCRV20
 import utils.ocr_infer.pytorchocr_utility as utility
 from dependency.ocr.postprocess import build_post_process
 from dependency.ocr.toolkit.utility import get_image_file_list, check_and_read_gif
-
+import onnxruntime
 
 class TextRecognizer(BaseOCRV20):
     def __init__(self, args, **kwargs):
@@ -89,6 +89,8 @@ class TextRecognizer(BaseOCRV20):
         network_config = utility.AnalysisConfig(self.weights_path, self.yaml_path, char_num)
         weights = self.read_pytorch_weights(self.weights_path)
 
+        # providers = ['CUDAExecutionProvider','CPUExecutionProvider']
+        # self.ort_rec_session = onnxruntime.InferenceSession("rec_model.onnx",providers=providers)
         self.out_channels = self.get_out_channels(weights)
         if self.rec_algorithm == 'NRTR':
             self.out_channels = list(weights.values())[-1].numpy().shape[0]
@@ -431,16 +433,17 @@ class TextRecognizer(BaseOCRV20):
                     if self.use_gpu:
                         inp = inp.cuda()
                     prob_out = self.net(inp)
-
+                    a = torch.jit.trace(self.net,inp)
+                    
                 if isinstance(prob_out, list):
                     preds = [v.cpu().numpy() for v in prob_out]
                 else:
                     preds = prob_out.cpu().numpy()
-
             rec_result = self.postprocess_op(preds)
             for rno in range(len(rec_result)):
                 rec_res[indices[beg_img_no + rno]] = rec_result[rno]
             elapse += time.time() - starttime
+            print(rec_res)
             # print(elapse)
         return rec_res, elapse
 
@@ -461,7 +464,7 @@ def main(args):
         img_list.append(img)
     try:
         rec_res, predict_time = text_recognizer(img_list)
-        print(rec_res)
+        # print(rec_res)
     except Exception as e:
         print(e)
         exit()

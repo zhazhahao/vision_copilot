@@ -4,12 +4,12 @@ import numpy as np
 from itertools import groupby
 from typing import Dict, List
 from ultralytics import YOLO
-from backbone import Backbone
+from engine import Engine
 from modules.cameras import VirtualCamera
 from qinglang.utils.utils import Config, ClassDict, load_json, load_yaml
 
 
-class InferenceEngine(Backbone):
+class BenchmarkEngine(Engine):
     def __init__(self, logger: ClassDict) -> None:
         super().__init__()
         
@@ -32,7 +32,7 @@ class PharmacyCopilotBenchmark:
             drug_detection_results = [],
         )
         
-        engine = InferenceEngine(logger)
+        engine = BenchmarkEngine(logger)
         engine.stream = VirtualCamera(dataset.video)
         engine.prescription = load_yaml(dataset.prescription)
         

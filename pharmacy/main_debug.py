@@ -22,21 +22,22 @@ class MainProcess:
         self.config = Config("configs/main.yaml")
         self.source = Config("configs/source.yaml")
 
-        self.stream = DRIFTX3()
+        # self.stream = DRIFTX3()
         self.init_work_dir()
         self.init_shared_variables()
         self.init_subprocess()
         self.prescription = self.get_prescription()
 
         self.medicine_database = MedicineDatabase()
-        # self.stream = VirtualCamera(self.source.virtual_camera_source)
+        self.stream = VirtualCamera(self.source.virtual_camera_source)
         self.catch_checker = CatchChecker()
 
     def get_prescription(self) -> List[int]:
-        res = self.subprocesses.ocr.scan_prescription(self.stream)
-        while(res == None):
-            res = self.subprocesses.ocr.scan_prescription(self.stream)
-        return res
+        # res = self.subprocesses.ocr.scan_prescription(self.stream)
+        # while(res == None):
+        #     res = self.subprocesses.ocr.scan_prescription(self.stream)
+        # return res
+        ...
     
     def init_work_dir(self) -> None:
         self.work_dir = f"work_dirs/{datetime.now().strftime('%Y%m%d-%H%M%S')}"
@@ -69,7 +70,6 @@ class MainProcess:
             self.share_frame(frame)
             
             hand_detection_results, drug_detection_results, ocr_results = self.parallel_inference()
-            
             if ocr_results:
                 location = most_common([self.medicine_database[medicine['category_id']].get("Shelf") for medicine in ocr_results])
                 drug_detection_results = [drug for drug in drug_detection_results if self.medicine_database[drug['category_id']].get("Shelf") == location]
@@ -80,11 +80,12 @@ class MainProcess:
             # print(self.prescription)
             
             for object_catched in check_results:
-                if object_catched.category_id in self.prescription:
-                    ...
-                else:
-                    self.stream.beep()
-                    print(self.medicine_database[object_catched.category_id])
+                print(object_catched)
+                # if object_catched.category_id in self.prescription:
+                #     ...
+                # else:
+                #     self.stream.beep()
+                #     print(self.medicine_database[object_catched.category_id])
 
 
             self.export_results(frame, check_results, hand_detection_results, drug_detection_results, self.catch_checker.hand_tracker.tracked_objects, self.catch_checker.medicine_tracker.tracked_objects)
@@ -112,12 +113,12 @@ class MainProcess:
         if self.config.export_results_images:
             self.plot_results(frame, check_results, hand_detection_results, drug_detection_results)
 
-        print("---------------------------------------------------------------------")
-        print(check_results)
-        print(hand_detection_results)
-        print(drug_detection_results)
-        print(hand_tracked)
-        print(drug_tracked)
+        # print("---------------------------------------------------------------------")
+        # print(check_results)
+        # print(hand_detection_results)
+        # print(drug_detection_results)
+        # print(hand_tracked)
+        # print(drug_tracked)
 
     def plot_results(self, frame, check_results, hand_detection_results, drug_detection_results):
         image = deepcopy(frame)

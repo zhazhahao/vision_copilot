@@ -1,6 +1,6 @@
 
 import numpy as np
-# from itertools import groupby
+from itertools import groupby
 # from qinglang.utils.utils import timer
 # # 测试代码
 # lst = [0, 0, 0, 'A', 'A', 'A', 'A', 'A', 0, 0, 'B', 'B', 'B', 'B', 'C', 'C', 'C', 'C'] * 30 * 60 * 5
@@ -33,19 +33,37 @@ import numpy as np
 # # for idx, (elem, indices) in enumerate(result):
 # #     print("第{}次：({}, {})".format(idx + 1, elem, indices))
 
-import numpy as np
+# import numpy as np
 
-# 创建一个 NumPy 数组
-arr = np.array([1, 2, 3, 4, 5])
+# # 创建一个 NumPy 数组
+# arr = np.array([1, 2, 3, 4, 5])
 
-# 定义指定列表
-lst = [2, 4]
+# # 定义指定列表
+# lst = [2, 4]
 
-# 使用 numpy.in1d 函数创建一个布尔数组，表示数组中的每个元素是否在指定列表中
-not_in_lst_indices = np.in1d(arr, lst, invert=True)
+# # 使用 numpy.in1d 函数创建一个布尔数组，表示数组中的每个元素是否在指定列表中
+# not_in_lst_indices = np.in1d(arr, lst, invert=True)
 
-# 使用 count_nonzero 函数统计布尔索引中为 True 的数量
-count = np.count_nonzero(not_in_lst_indices)
+# # 使用 count_nonzero 函数统计布尔索引中为 True 的数量
+# count = np.count_nonzero(not_in_lst_indices)
 
-print("不在列表 {} 中的元素数量为: {}".format(lst, count))
-print(len([key for key in arr if key not in lst]))
+# print("不在列表 {} 中的元素数量为: {}".format(lst, count))
+# print(len([key for key in arr if key not in lst]))
+
+
+from qinglang.utils.utils import load_json
+from pprint import pprint
+
+def group_consecutive_elements(lst):
+    groups = []
+    current_index = 0
+    for key, group in groupby(lst):
+        group_length = len(list(group))
+        # groups.append((key, current_index + np.arange(group_length)))
+        groups.append((key, [current_index, current_index + group_length - 1]))
+        current_index += group_length
+    return groups
+
+anno = load_json("/home/portable-00/data/20240313_160556/catch_action.json")
+group = group_consecutive_elements(anno)
+pprint(group)

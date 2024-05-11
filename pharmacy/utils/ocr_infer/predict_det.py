@@ -8,6 +8,7 @@ import copy
 import cv2
 import numpy as np
 import time
+import onnxruntime
 import json
 import torch
 from dependency.ocr.base_ocr_v20 import BaseOCRV20
@@ -21,6 +22,7 @@ from dependency.ocr.postprocess import build_post_process
 class TextDetector(BaseOCRV20):
     def __init__(self, args, **kwargs):
         self.args = args
+        
         self.det_algorithm = args.det_algorithm
         pre_process_list = [{
             'DetResizeForTest': {
@@ -116,10 +118,10 @@ class TextDetector(BaseOCRV20):
 
         self.preprocess_op = create_operators(pre_process_list)
         self.postprocess_op = build_post_process(postprocess_params)
-
+        self.epoch = 0
         use_gpu = args.use_gpu
         self.use_gpu = torch.cuda.is_available() and use_gpu
-
+        self.a_new_model = torch.jit.load("/home/portable-00/VisionCopilot/pharmacy/checkpoints/ocr/try.wangsang")
         self.weights_path = args.det_model_path
         self.yaml_path = args.det_yaml_path
         network_config = utility.AnalysisConfig(self.weights_path, self.yaml_path)
@@ -129,6 +131,7 @@ class TextDetector(BaseOCRV20):
         if self.use_gpu:
             self.net.cuda()
 
+        
     def order_points_clockwise(self, pts):
         """
         reference from: https://github.com/jrosebr1/imutils/blob/master/imutils/perspective.py
@@ -183,6 +186,7 @@ class TextDetector(BaseOCRV20):
         return dt_boxes
 
     def __call__(self, img):
+        self.epoch += 1
         ori_im = img.copy()
         data = {'image': img}
         data = transform(data, self.preprocess_op)
@@ -193,13 +197,18 @@ class TextDetector(BaseOCRV20):
         shape_list = np.expand_dims(shape_list, axis=0)
         img = img.copy()
         starttime = time.time()
-
+        
         with torch.no_grad():
             inp = torch.from_numpy(img)
+            a = time.time()
             if self.use_gpu:
                 inp = inp.cuda()
             outputs = self.net(inp)
-        
+            print(time.time() - a)
+            a = time.time()
+            outputs = self.a_new_model(inp)
+            print("jit",time.time() - a)
+            
         preds = {}
         if self.det_algorithm == "EAST":
             preds['f_geo'] = outputs['f_geo'].cpu().numpy()
@@ -252,7 +261,7 @@ if __name__ == "__main__":
         count += 1
         save_pred = os.path.basename(image_file) + "\t" + str(
             json.dumps(np.array(dt_boxes).astype(np.int32).tolist())) + "\n"
-        print("pred"+save_pred)
+        # print("pred"+save_pred)
         print("Predict time of {}: {}".format(image_file, elapse))
         src_im = utility.draw_text_det_res(dt_boxes, image_file)
         img_name_pure = os.path.split(image_file)[-1]

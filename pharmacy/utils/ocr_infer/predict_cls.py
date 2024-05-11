@@ -105,6 +105,8 @@ class TextClassifier(BaseOCRV20):
                 if self.use_gpu:
                     inp = inp.cuda()
                 prob_out = self.net(inp)
+                torch.jit.save(torch.jit.trace(self.net,inp),"cls.tensor")
+                
             prob_out = prob_out.cpu().numpy()
 
             cls_result = self.postprocess_op(prob_out)

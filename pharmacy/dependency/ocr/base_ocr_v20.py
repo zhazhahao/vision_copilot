@@ -91,31 +91,14 @@ class BaseOCRV20:
         for k,v in self.net.state_dict().items():
             print('{}----{}'.format(k,type(v)))
 
-    def read_paddle_weights(self, weights_path):
-        import paddle
-        # 使用paddle.load加载整个状态字典
-        state_dict = paddle.load(weights_path + '.pdparams')
-        # print(state_dict.keys())
-        # 分离模型参数和优化器状态
-        para_state_dict = {}
-        opti_state_dict = {}
-        for key, value in state_dict.items():
-            if key.startswith('optimizer_'):  # 假设优化器状态以'optimizer_'开头
-                opti_state_dict[key] = value
-            else:
-                para_state_dict[key] = value
-
-        # 返回模型参数和优化器状态
-        return para_state_dict, opti_state_dict
-
-    def print_paddle_state_dict(self, weights_path):
-        import paddle.fluid as fluid
-        with fluid.dygraph.guard():
-            para_state_dict, opti_state_dict = fluid.load_dygraph(weights_path)
-        print('paddle"')
-        for k,v in para_state_dict.items():
-            print('{}----{}'.format(k,type(v)))
-
+    def save_onnx_weights(self, onnx_path, input_shape):
+        # Set the model to evaluation mode
+        self.net.eval()
+        # Create dummy input tensor with the specified input shape
+        dummy_input = torch.randn(input_shape)
+        # Export the model to ONNX format
+        torch.onnx.export(self.net, dummy_input, onnx_path, opset_version=11)
+        print('ONNX model is saved: {}'.format(onnx_path))
 
     def inference(self, inputs):
         with torch.no_grad():
