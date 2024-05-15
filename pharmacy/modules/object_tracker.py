@@ -47,7 +47,7 @@ class ObjectTracker:
                 bbox = None
             else:
                 bbox = candidates[nearest_idx]['bbox']
-                del detection_results[nearest_idx]
+                detection_results.remove(candidates[nearest_idx])
 
             tracked_object.add_frame_data(bbox)
             

@@ -19,3 +19,4 @@ with open('/home/portable-00/VisionCopilot/pharmacy/database/medicine_names.txt'
             print("剂量:", text[match.end(1):])
         else:
             print("未能匹配:", text)
+            

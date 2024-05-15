@@ -17,6 +17,7 @@ from qinglang.utils.utils import Config
 def image_put_thread(exit_flag,shm,config,rtsp_client_path):
     ffmpeg_video_command = load_ffmpeg_command_from_yaml('/home/portable-00/VisionCopilot/pharmacy/configs/video/configv1.yml', rtsp_client_path ,'ffmpeg_video_command')
     ffmpeg_process = achieve_process(ffmpeg_video_command)
+
     try_num = 0
     try:
         back_image = b''
@@ -76,7 +77,7 @@ def image_put_thread(exit_flag,shm,config,rtsp_client_path):
     ffmpeg_process.kill()
     
 class CameraProcessor:
-    def __init__(self,doaudio=True,rtsp_client_path="rtsp://192.168.8.100/live"):
+    def __init__(self,doaudio=True,rtsp_client_path="rtsp://192.168.0.60/live"):
         self.camera_name = "DRIFTX3"
         self.rtsp_client_path = rtsp_client_path
         self.doaudio = doaudio

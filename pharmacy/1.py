@@ -207,10 +207,10 @@ class TextDetector(BaseOCRV20):
             if self.use_gpu:
                 inp = inp.cuda()
             outputs = self.net(inp)
-            print(time.time() - a)
+            # print(time.time() - a)
             a = time.time()
             output = self.ort_session.run(None,{'x':img})
-            print("onnx",time.time() - a)
+            # print("onnx",time.time() - a)
         preds = {}
         if self.det_algorithm == "EAST":
             preds['f_geo'] = outputs['f_geo'].cpu().numpy()

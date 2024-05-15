@@ -1,2 +1,9 @@
 datasets:
-- "paths"
+- catch_annotation: catch_annotation.json
+  prescription: prescription.json
+  root_path: /home/portable-00/data/datasets/20240313_160556
+  video: 20240313_160556.mp4
+- catch_annotation: catch_annotation.json
+  prescription: prescription.json
+  root_path: /home/portable-00/data/datasets/20240313_160557
+  video: 20240313_160556.mp4

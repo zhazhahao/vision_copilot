@@ -101,7 +101,6 @@ class TextRecognizer(BaseOCRV20):
         super(TextRecognizer, self).__init__(network_config, **kwargs)
 
         self.load_state_dict(weights)
-        self.net.eval()
         if self.use_gpu:
             self.net.cuda()
 
@@ -433,7 +432,7 @@ class TextRecognizer(BaseOCRV20):
                     if self.use_gpu:
                         inp = inp.cuda()
                     prob_out = self.net(inp)
-                    a = torch.jit.trace(self.net,inp)
+                    # a = torch.jit.trace(self.net,inp)
                     
                 if isinstance(prob_out, list):
                     preds = [v.cpu().numpy() for v in prob_out]
@@ -443,7 +442,7 @@ class TextRecognizer(BaseOCRV20):
             for rno in range(len(rec_result)):
                 rec_res[indices[beg_img_no + rno]] = rec_result[rno]
             elapse += time.time() - starttime
-            print(rec_res)
+            # print(rec_res)
             # print(elapse)
         return rec_res, elapse
 

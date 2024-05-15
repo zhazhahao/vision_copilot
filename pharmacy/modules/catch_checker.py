@@ -15,8 +15,8 @@ class CatchChecker:
         self.medicine_tracker = ObjectTracker()
 
     def observe(self, hands: List[Dict], medicines: List[Dict]) -> None:
-        self.hand_tracker.update(deepcopy(hands))
-        self.medicine_tracker.update(deepcopy(medicines))
+        self.hand_tracker.update([{'bbox': hand['bbox'].tolist(), 'category_id': hand['category_id']} for hand in hands])
+        self.medicine_tracker.update([{'bbox': medicine['bbox'].tolist(), 'category_id': medicine['category_id']} for medicine in medicines])
     
     def check(self) -> List:
         medicines_catched = []
@@ -25,6 +25,9 @@ class CatchChecker:
 
             candidates = []
             for medicine in self.medicine_tracker.tracked_objects:
+                # if medicine.lost_tracking_counts() != 0:
+                #     continue
+                
                 medicine_bboxes = [node and xywh2xyxy(node['bbox']) for node in medicine.trajectory]
                 
                 # Check bboxes must intersection in latest {missing_tolerance} frames

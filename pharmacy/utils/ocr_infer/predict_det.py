@@ -200,14 +200,14 @@ class TextDetector(BaseOCRV20):
         
         with torch.no_grad():
             inp = torch.from_numpy(img)
-            a = time.time()
+            # a = time.time()
             if self.use_gpu:
                 inp = inp.cuda()
             outputs = self.net(inp)
-            print(time.time() - a)
-            a = time.time()
-            outputs = self.a_new_model(inp)
-            print("jit",time.time() - a)
+            # print(time.time() - a)
+            # a = time.time()
+            # outputs = self.a_new_model(inp)
+            # print("jit",time.time() - a)
             
         preds = {}
         if self.det_algorithm == "EAST":

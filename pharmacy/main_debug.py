@@ -14,7 +14,6 @@ from utils.utils import MedicineDatabase
 from qinglang.utils.utils import ClassDict, Config, most_common
 from qinglang.dataset.utils.utils import plot_xywh
 
-
 class MainProcess:
     def __init__(self) -> None:
         multiprocessing.set_start_method('spawn')

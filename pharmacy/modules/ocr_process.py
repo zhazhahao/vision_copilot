@@ -1,4 +1,5 @@
 from collections import Counter
+import time
 import cv2
 import numpy as np
 import torch.multiprocessing as multiprocessing
@@ -6,10 +7,12 @@ from utils.ocr_infer.prescription_utils import FrameMaxMatchingCollections, PreS
 
 
 class OCRProcess(multiprocessing.Process):
-    def __init__(self, inference_event: multiprocessing.Event, done_barrier: multiprocessing.Barrier, frame_shared_array: multiprocessing.Array, wild_ocr_outputs: multiprocessing.Queue) -> None:
+    def __init__(self, init_done_barrier: multiprocessing.Barrier, inference_event: multiprocessing.Event, done_barrier: multiprocessing.Barrier, terminal_event: multiprocessing.Event, frame_shared_array: multiprocessing.Array, wild_ocr_outputs: multiprocessing.Queue) -> None:
         super().__init__()
+        self.init_done_barrier = init_done_barrier
         self.inference_event = inference_event
         self.done_barrier = done_barrier
+        self.terminal_event = terminal_event
         self.frame_shared_array = frame_shared_array
         self.wild_ocr_outputs = wild_ocr_outputs        
         self.daemon = True
@@ -125,16 +128,23 @@ class OCRProcess(multiprocessing.Process):
         
     def run(self) -> None:
         self.init_process()
+        
+        self.init_done_barrier.wait()
+        
         while True:
             self.inference_event.wait()
+            
+            if self.terminal_event.is_set():
+                break
+            
             self.execute()
 
     
     def execute(self) -> None:
         image = np.frombuffer(self.frame_shared_array.get_obj(), dtype=np.uint8).reshape((1080, 1920, 3))
-        
+        a = time.time()
         result = self.ocr_detector.ocr_detect(image)
-
+        # print(time.time() - a)
         self.wild_ocr_outputs.put(result)
         self.done_barrier.wait()
         self.inference_event.clear()

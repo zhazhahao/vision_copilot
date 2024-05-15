@@ -53,7 +53,7 @@ ffmpeg_video_command:
   - -fflags
   - nobuffer
   - -probesize
-  - 300M
+  - 100M
   - -c:v
   - h264
   - -i

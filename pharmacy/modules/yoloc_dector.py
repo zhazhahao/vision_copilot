@@ -8,7 +8,7 @@ from qinglang.data_structure.video.video_base import VideoFlow
 from utils.yolv_infer.yolov_teller import get_drug_by_index, tensor_converter
 
 
-print('YolovDector initialized')
+# print('YolovDector initialized')
 
 class YolovDector:
     def __init__(self) -> None:
