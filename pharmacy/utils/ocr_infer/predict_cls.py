@@ -101,10 +101,12 @@ class TextClassifier(BaseOCRV20):
             starttime = time.time()
 
             with torch.no_grad():
+                # a = time.time()
                 inp = torch.from_numpy(norm_img_batch)
                 if self.use_gpu:
                     inp = inp.cuda()
                 prob_out = self.net(inp)
+                # print(time.time() - a)
                 
             prob_out = prob_out.cpu().numpy()
 

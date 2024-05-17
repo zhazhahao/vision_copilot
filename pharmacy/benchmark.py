@@ -12,15 +12,18 @@ from ultralytics import YOLO
 from engine import Engine
 from tqdm import tqdm
 from modules.cameras import VirtualCamera
+from qinglang.data_structure.image.image_base import ImageFlow
+from qinglang.data_structure.video.video_toolbox import VideoToolbox
+from qinglang.dataset.utils.utils import plot_xywh
 from qinglang.utils.utils import Config, ClassDict, Logger, load_json, load_yaml
-from qinglang.utils.io import load_pickle, dump_pickle, clear_lines
+from qinglang.utils.io import load_pickle, dump_pickle
 
 matplotlib.use('agg')
 
 """
 TO BE DONE:
   - multi-dataset benchmark support (√)
-  - save noticeable frames automatically
+  - save noticeable frames automatically (√)
 
 """
 
@@ -62,10 +65,9 @@ class PharmacyCopilotBenchmark:
         # Inference
         self.logger.info(rf"Inference started.")
 
-        results = self.inference(dataset)
-        dump_pickle(results, os.path.join(dataset.root_path, 'results.pkl'))
-        
-        # results = load_pickle(os.path.join(dataset.root_path, 'results.pkl'))
+        # results = self.inference(dataset)
+        # dump_pickle(results, os.path.join(dataset.root_path, 'results.pkl'))
+        results = load_pickle(os.path.join(dataset.root_path, 'results.pkl'))
         
         # Benchmark        
         self.test_catch_recognition(dataset, results)
@@ -79,7 +81,7 @@ class PharmacyCopilotBenchmark:
 
         engine = BenchmarkEngine()
         engine.stream = VirtualCamera(os.path.join(dataset.root_path, dataset.video))
-        engine.pbar = tqdm(total=len(engine.stream), desc="Inference progress:")
+        engine.pbar = tqdm(total=len(engine.stream), desc="Inference progress:", colour="red")
         engine.history = history
         
         engine.run()
@@ -97,6 +99,14 @@ class PharmacyCopilotBenchmark:
         catch_tp_count = 0
         catch_fp_count = 0
         
+        image_flow = ImageFlow(os.path.join(dataset.root_path, 'images'))
+        video_toolbox = VideoToolbox(os.path.join(dataset.root_path, dataset.video))
+        
+        work_dir = os.path.join(dataset.work_dir, 'catch_recognition')
+        os.makedirs(work_dir, exist_ok=True)
+        os.makedirs(os.path.join(work_dir, 'annotated_actions'), exist_ok=True)
+        os.makedirs(os.path.join(work_dir, 'predicted_actions'), exist_ok=True)
+        
         # Check frames grouped by annotations
         for drug_id, [start, end] in self.group_consecutive_elements(catch_annotations):
             if drug_id == 0:
@@ -104,7 +114,26 @@ class PharmacyCopilotBenchmark:
             
             if drug_id in catch_predictions[start: end]:
                 catch_tp_count += 1
+            
+            video_writer = video_toolbox.get_videoWriter(os.path.join(work_dir, 'annotated_actions', rf'{str(drug_id).zfill(4)}_{start}-{end-1}.mp4'))
+            
+            for frame, check_result, hand_detection_result, drug_detection_result in zip(image_flow[start: end], results.check_results[start: end], results.hand_detection_results[start: end], results.drug_detection_results[start: end]):
+                if hand_detection_result != []:
+                    for result in hand_detection_result:
+                        plot_xywh(frame, result['bbox'], category=result['category_id'])
+
+                if drug_detection_result != []:
+                    for result in drug_detection_result:
+                        plot_xywh(frame, result['bbox'], category=result['category_id'])
+                        
+                if check_result != []:
+                    for result in check_result:
+                        plot_xywh(frame, result['bbox'], category=result['category_id'], color=(0, 0, 255))
                 
+                video_writer.write(frame)
+            
+            video_writer.release()
+
             # predictions = {element: count for element, count in zip(*np.unique([frame_result[0]['category_id'] for frame_result in results.check_results[start: end] if frame_result], return_counts=True))}
             # catch_fp_count += len([key for key in predictions.keys() if key not in [0, drug_id]])
 
@@ -117,6 +146,25 @@ class PharmacyCopilotBenchmark:
             
             if not np.all((catch_annotations[start: end] == drug_id) | (catch_annotations[start: end] == 0)) or not np.any(catch_annotations[start: end] == drug_id):
                 catch_fp_count += 1
+
+            video_writer = video_toolbox.get_videoWriter(os.path.join(work_dir, 'predicted_actions', rf'{str(drug_id).zfill(4)}_{start}-{end-1}.mp4'))
+            
+            for frame, check_result, hand_detection_result, drug_detection_result in zip(image_flow[start: end], results.check_results[start: end], results.hand_detection_results[start: end], results.drug_detection_results[start: end]):
+                if hand_detection_result != []:
+                    for result in hand_detection_result:
+                        plot_xywh(frame, result['bbox'], category=result['category_id'])
+
+                if drug_detection_result != []:
+                    for result in drug_detection_result:
+                        plot_xywh(frame, result['bbox'], category=result['category_id'])
+                        
+                if check_result != []:
+                    for result in check_result:
+                        plot_xywh(frame, result['bbox'], category=result['category_id'], color=(0, 0, 255))
+                
+                video_writer.write(frame)
+            
+            video_writer.release()
 
         # calculate metrics
         catch_checking_recall = catch_tp_count / len(prescription)
@@ -257,4 +305,6 @@ if __name__ == '__main__':
 # print("Accuracy:", accuracy)
 # # print("Error rate:", error_rate)
 # # print("Error frames:", error_frames)
+
+
 

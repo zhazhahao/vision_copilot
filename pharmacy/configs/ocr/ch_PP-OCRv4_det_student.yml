@@ -11,7 +11,7 @@ Global:
   - 1500
   cal_metric_during_train: false
   checkpoints:
-  pretrained_model: https://paddleocr.bj.bcebos.com/pretrained/PPHGNet_small_ocr_det.pdparams
+  pretrained_model: https://paddleocr.bj.bcebos.com/pretrained/PPLCNetV3_x0_75_ocr_det.pdparams
   save_inference_dir: null
   use_visualdl: false
   infer_img: doc/imgs_en/img_10.jpg
@@ -23,17 +23,16 @@ Architecture:
   algorithm: DB
   Transform: null
   Backbone:
-    name: PPHGNet_small
+    name: PPLCNetV3
+    scale: 0.75
     det: True
   Neck:
-    name: LKPAN
-    out_channels: 256
-    intracl: true
+    name: RSEFPN
+    out_channels: 96
+    shortcut: True
   Head:
-    name: PFHeadLocal
+    name: DBHead
     k: 50
-    mode: "large"
-    
 
 Loss:
   name: DBLoss
@@ -53,7 +52,7 @@ Optimizer:
     warmup_epoch: 2
   regularizer:
     name: L2
-    factor: 1e-6
+    factor: 5.0e-05
 
 PostProcess:
   name: DBPostProcess

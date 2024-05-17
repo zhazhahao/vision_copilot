@@ -1,12 +1,14 @@
 import re
 
-before_keywords = ["集采", "万单位", "预灌封", "预充式", "\[N-R]", "\[N-N]", "\[30R]", "\[50R]"]
+before_keywords = ["集采", "预灌封", "预充式", "预充装","小" ,r"\[N-R\]", r"\[N-N\]", r"\[30R\]", r"\[50R\]", r"笔芯\[Y-R\]", r"\(笔芯\)",r"\(水果味\)", r"笔芯",r"预充",r"预装式",r"预冲式",r"预填充"]
+unit_keywords = ["单位", "万单位","m", "ml", "mg", "g", "IU", "WU" ,"UG", "mgI","ML","喷","微克","吸","粒","μg","揿","揿×","mg:","g:","喷\*","l"]
 keyword_pattern = "|".join(before_keywords)
-pattern = rf"(.+?)\s*(?:({keyword_pattern})(?:\S*\s*)?)?(\d+(?:\.\d+)?(?:%|mg|g|WU|单位)?\d*(?:\.\d+)?(?:\/\d+)?)(ml\/\S+)"
+unit_pattern = "|".join(unit_keywords)
+pattern = rf"^(.+?)\s*(?:{keyword_pattern})?\s*(((\d+(\.\d+)?)%?[a-zA-Z%μ]*\s*)+({unit_pattern})((\d+(\.\d+)?\s*)+({unit_pattern})\s*)*x?\d*\s*)/\s*(\S+)$"
+# search_num_text = re.compile(r'\d')
 
 texts = [
-    "格拉诺赛特(注射用重组人粒细胞刺激因子[CHO细胞])50UG/支",
-    "脂肪乳氨基酸(17)葡萄糖(11%)注 1440ml/袋",
+    "典必眼(安布素地5l/支",
     "美平(注射用美罗培南)0.5g/瓶",
     "注射用美罗培南0.5g/支",
     "泰能(注射用亚胺培南西司他丁钠) 0.5g/0.5g/支",

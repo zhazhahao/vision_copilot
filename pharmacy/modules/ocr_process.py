@@ -142,9 +142,7 @@ class OCRProcess(multiprocessing.Process):
     
     def execute(self) -> None:
         image = np.frombuffer(self.frame_shared_array.get_obj(), dtype=np.uint8).reshape((1080, 1920, 3))
-        a = time.time()
         result = self.ocr_detector.ocr_detect(image)
-        # print(time.time() - a)
         self.wild_ocr_outputs.put(result)
         self.done_barrier.wait()
         self.inference_event.clear()

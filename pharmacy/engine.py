@@ -1,4 +1,5 @@
 import sys
+import time
 import numpy as np
 import torch.multiprocessing as multiprocessing
 from typing import List, Dict
@@ -87,9 +88,9 @@ class Engine:
     def run(self) -> None:
         for frame in self.stream:
             self._share_frame_to_memory(frame)
-
+            # a = time.time()
             hand_detection_results, drug_detection_results, ocr_results = self._parallel_inference()
-            
+            #print(time.time() - a)
             self.fore_process()
 
             if ocr_results != []:
