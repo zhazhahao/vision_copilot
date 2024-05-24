@@ -65,8 +65,8 @@ class PharmacyCopilotBenchmark:
         # Inference
         self.logger.info(rf"Inference started.")
 
-        # results = self.inference(dataset)
-        # dump_pickle(results, os.path.join(dataset.root_path, 'results.pkl'))
+        results = self.inference(dataset)
+        dump_pickle(results, os.path.join(dataset.root_path, 'results.pkl'))
         results = load_pickle(os.path.join(dataset.root_path, 'results.pkl'))
         
         # Benchmark        
