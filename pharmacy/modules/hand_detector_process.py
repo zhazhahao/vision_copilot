@@ -21,9 +21,9 @@ class HandDetectorProcess(multiprocessing.Process):
         self.source = Config('configs/source.yaml')
         
         from mmdeploy_runtime import Detector
-        clear_lines(3)
+        # clear_lines(3)
         self.detector = Detector(model_path=self.source.onnx_path, device_name=self.config.device)
-        clear_lines(1)
+        # clear_lines(1)
 
     def run(self) -> None:
         self.init_process()

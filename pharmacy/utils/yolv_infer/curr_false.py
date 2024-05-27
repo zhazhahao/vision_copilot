@@ -23,9 +23,9 @@ def curr_false(text, data_lists, max_threshold=0.4):
         filtered_data_lists = data_lists.copy()
         match = re.search(pattern, text)
         # print(text)
-        if match:
-            print("药品名称:", match.group(1))
-            print("剂量:", text[match.end(1):])
+        # if match:
+        #     print("药品名称:", match.group(1))
+        #     print("剂量:", text[match.end(1):])
         if search_brackets_text.search(text):
             filtered_data_lists = [item for item in filtered_data_lists if search_brackets_text.search(item[0])]
         text = text.replace("（", "(").replace("）", ")").replace("【", "[").replace("】", "]")

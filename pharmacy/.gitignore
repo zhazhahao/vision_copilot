@@ -2,6 +2,7 @@
 *.png
 *.mp4
 checkpoints
+benchmark_results
 configs/source.yaml
 test.py
 ngx_dlss_demo/

@@ -1,9 +1,13 @@
 datasets:
 - catch_annotation: catch_annotation.json
   prescription: prescription.json
-  root_path: /home/portable-00/data/datasets/20240313_160556
+  root_path: /mnt/data/public/pharmacy_copilot/benchmark/20240313_160556
   video: 20240313_160556.mp4
 - catch_annotation: catch_annotation.json
   prescription: prescription.json
-  root_path: /home/portable-00/data/datasets/20240313_160557
-  video: 20240313_160556.mp4
+  root_path: /mnt/data/public/pharmacy_copilot/benchmark/20240523_164138
+  video: 20240523_164138.MP4
+- catch_annotation: catch_annotation.json
+  prescription: prescription.json
+  root_path: /mnt/data/public/pharmacy_copilot/benchmark/20240523_164718
+  video: 20240523_164718.MP4

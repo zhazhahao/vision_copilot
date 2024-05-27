@@ -16,7 +16,7 @@ from qinglang.data_structure.image.image_base import ImageFlow
 from qinglang.data_structure.video.video_toolbox import VideoToolbox
 from qinglang.dataset.utils.utils import plot_xywh
 from qinglang.utils.utils import Config, ClassDict, Logger, load_json, load_yaml
-from qinglang.utils.io import load_pickle, dump_pickle
+from qinglang.utils.io import load_pickle, dump_pickle, dump_json
 
 matplotlib.use('agg')
 
@@ -66,8 +66,8 @@ class PharmacyCopilotBenchmark:
         self.logger.info(rf"Inference started.")
 
         results = self.inference(dataset)
-        dump_pickle(results, os.path.join(dataset.root_path, 'results.pkl'))
-        results = load_pickle(os.path.join(dataset.root_path, 'results.pkl'))
+        # dump_pickle(results, os.path.join(dataset.root_path, 'results.pkl'))
+        # results = load_pickle(os.path.join(dataset.root_path, 'results.pkl'))
         
         # Benchmark        
         self.test_catch_recognition(dataset, results)
@@ -166,13 +166,16 @@ class PharmacyCopilotBenchmark:
             
             video_writer.release()
 
-        # calculate metrics
-        catch_checking_recall = catch_tp_count / len(prescription)
-        catch_fp_per_minute = catch_fp_count / len(catch_annotations) * 30
-        drugs_missing = [drug for drug in prescription if drug not in drugs_caught]
-        drugs_misreport = [drug for drug in drugs_caught if drug not in prescription]
+        # # calculate metrics
+        metrics = ClassDict()
+        metrics.drugs_misreport = [int(drug) for drug in drugs_caught if drug not in prescription]
+        metrics.drugs_missing = [int(drug) for drug in prescription if drug not in drugs_caught]
+        metrics.catch_checking_recall = (len(prescription)-len(metrics.drugs_missing)) / len(prescription)
+        metrics.catch_fp_per_minute = catch_fp_count / len(catch_annotations) * 30 * 60
         
-        self.logger.info(rf"catch_checking_recall: {catch_checking_recall}, catch_fp_count: {catch_fp_count}, catch_fp_per_minute: {catch_fp_per_minute}, drugs_missing: {drugs_missing}, drugs_misreport: {drugs_misreport}")
+        self.logger.info(', '.join([f'{key}: {value}' for key, value in metrics]))
+        
+        dump_json(metrics.__dict__, os.path.join(work_dir, 'results.json'))
 
     def group_consecutive_elements(self, lst):
         groups = []
